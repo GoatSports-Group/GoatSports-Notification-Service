@@ -1,7 +1,7 @@
 package iuh.fit.notificationservice.application.mapper;
 
-import iuh.fit.notificationservice.application.dto.response.NotificationResponseCommand;
-import iuh.fit.notificationservice.application.dto.response.NotificationSummaryResponseCommand;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationSummaryResponseCommand;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
 import iuh.fit.notificationservice.domain.entity.Notification;
 

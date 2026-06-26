@@ -4,7 +4,7 @@ import iuh.fit.notificationservice.application.dto.PageFilter;
 import iuh.fit.notificationservice.application.dto.request.CountUnreadNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.GetNotificationsCommand;
 import iuh.fit.notificationservice.application.dto.request.MarkNotificationReadCommand;
-import iuh.fit.notificationservice.application.dto.response.NotificationResponseCommand;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.dto.response.base.BaseListResponse;
 import iuh.fit.notificationservice.application.dto.response.base.BaseResponse;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;

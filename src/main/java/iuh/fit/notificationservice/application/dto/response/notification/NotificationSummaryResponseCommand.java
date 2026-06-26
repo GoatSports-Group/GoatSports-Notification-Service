@@ -1,4 +1,4 @@
-package iuh.fit.notificationservice.application.dto.response;
+package iuh.fit.notificationservice.application.dto.response.notification;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

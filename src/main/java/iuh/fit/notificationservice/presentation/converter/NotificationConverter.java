@@ -1,6 +1,6 @@
 package iuh.fit.notificationservice.presentation.converter;
 
-import iuh.fit.notificationservice.application.dto.response.NotificationResponseCommand;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.presentation.response.NotificationResponse;
 
 public class NotificationConverter {

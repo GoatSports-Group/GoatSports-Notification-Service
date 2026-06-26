@@ -1,6 +1,6 @@
 package iuh.fit.notificationservice.infrastructure.external.websocket;
 
-import iuh.fit.notificationservice.application.dto.response.NotificationResponseCommand;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.mapper.NotificationMapper;
 import iuh.fit.notificationservice.application.port.websocket.NotificationWebSocketPublisher;
 import iuh.fit.notificationservice.domain.entity.Notification;
