@@ -24,7 +24,11 @@ public class OwnerApplicationConsumer {
 
     private final AuthClient authClient;
 
-    @KafkaListener(topics = "${spring.kafka.topic.owner-application}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(
+            topics = "${spring.kafka.topic.owner-application}",
+            groupId = "${spring.kafka.consumer.group-id}",
+            containerFactory = "listenerFactory"
+    )
     public void consume(OwnerApplicationEvent event) {
         log.info("Nhận sự kiện kafka: {}", event);
         try {
@@ -52,6 +56,6 @@ public class OwnerApplicationConsumer {
     }
 
     private String getAdminReceiverId() {
-        return authClient.getAdmin().getData();
+        return authClient.getAdmin();
     }
 }

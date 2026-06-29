@@ -1,6 +1,5 @@
 package iuh.fit.notificationservice.infrastructure.external.client;
 
-import iuh.fit.notificationservice.application.dto.response.base.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -11,5 +10,5 @@ import org.springframework.web.bind.annotation.GetMapping;
 )
 public interface AuthClient {
     @GetMapping("/admin")
-    BaseResponse<String> getAdmin();
+    String getAdmin();
 }
