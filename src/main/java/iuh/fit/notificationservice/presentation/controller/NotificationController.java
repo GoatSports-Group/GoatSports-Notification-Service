@@ -63,7 +63,7 @@ public class NotificationController {
     }
 
     @GetMapping("/unread-count")
-    public ResponseEntity<BaseResponse<Long>> countUnreadNotifications() throws ServiceException {
+    public ResponseEntity<Long> countUnreadNotifications() throws ServiceException {
         String userIdStr = currentUserProvider.getCurrentUserId()
                 .orElseThrow(() -> new ServiceException("Bạn phải đăng nhập để thực hiện chức năng này."));
         UUID receiverId = BaseUtil.uuid(userIdStr);
@@ -71,12 +71,7 @@ public class NotificationController {
         CountUnreadNotificationCommand command = new CountUnreadNotificationCommand(receiverId);
         long count = notificationService.countUnreadNotification(command);
 
-        BaseResponse<Long> response = new BaseResponse<>();
-        response.setStatusCode(HttpStatus.OK.value());
-        response.setData(count);
-        response.setMessage("Lấy số thông báo chưa đọc thành công.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(count);
     }
 
     @PutMapping("/{id}/read")
