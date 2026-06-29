@@ -14,7 +14,6 @@ import iuh.fit.notificationservice.domain.enums.NotificationStatus;
 import iuh.fit.notificationservice.domain.enums.NotificationType;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 public class NotificationServiceImpl implements NotificationService {
 
@@ -23,8 +22,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     public NotificationServiceImpl(
             NotificationRepository notificationRepository,
-            NotificationWebSocketPublisher webSocketPublisher
-    ) {
+            NotificationWebSocketPublisher webSocketPublisher) {
         this.notificationRepository = notificationRepository;
         this.webSocketPublisher = webSocketPublisher;
     }
