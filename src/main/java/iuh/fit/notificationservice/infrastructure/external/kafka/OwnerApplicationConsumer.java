@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -26,9 +27,9 @@ public class OwnerApplicationConsumer {
 
     @KafkaListener(
             topics = "${spring.kafka.topic.owner-application}",
-            groupId = "${spring.kafka.consumer.group-id}",
-            containerFactory = "listenerFactory"
+            groupId = "${spring.kafka.consumer.group-id}"
     )
+    @Transactional
     public void consume(OwnerApplicationEvent event) {
         log.info("Nhận sự kiện kafka: {}", event);
         try {
