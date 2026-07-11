@@ -35,6 +35,10 @@ public class OwnerApplicationConsumer {
         try {
             if (event.getEventType() == OwnerApplicationEventType.SUBMITTED) {
                 consumeSubmitted(event);
+            } else if (event.getEventType() == OwnerApplicationEventType.APPROVED) {
+                consumeApproved(event);
+            } else if (event.getEventType() == OwnerApplicationEventType.REJECTED) {
+                consumeRejected(event);
             }
         } catch (Exception e) {
             log.error("Thất bại trong khi xử lý sự kiện Kafka: {}", e.getMessage(), e);
@@ -54,6 +58,36 @@ public class OwnerApplicationConsumer {
 
         notificationService.createNotification(command);
         log.info("Tạo thông báo thành công");
+    }
+
+    private void consumeApproved(OwnerApplicationEvent event) throws ServiceException {
+        UUID adminReceiverId = BaseUtil.uuid(getAdminReceiverId());
+
+        CreateNotificationCommand command = new CreateNotificationCommand(
+                event.getData().getUserId(),
+                "Yêu cầu đăng ký chủ sân được phê duyệt",
+                "Đơn đăng ký làm chủ sân của bạn đã được chấp nhận.",
+                NotificationType.OWNER_APPLICATION.name(),
+                adminReceiverId
+        );
+
+        notificationService.createNotification(command);
+        log.info("Tạo thông báo phê duyệt thành công");
+    }
+
+    private void consumeRejected(OwnerApplicationEvent event) throws ServiceException {
+        UUID adminReceiverId = BaseUtil.uuid(getAdminReceiverId());
+
+        CreateNotificationCommand command = new CreateNotificationCommand(
+                event.getData().getUserId(),
+                "Yêu cầu đăng ký chủ sân bị từ chối",
+                "Đơn đăng ký làm chủ sân của bạn đã bị từ chối. Lý do: " + event.getData().getRejectReason(),
+                NotificationType.OWNER_APPLICATION.name(),
+                adminReceiverId
+        );
+
+        notificationService.createNotification(command);
+        log.info("Tạo thông báo từ chối thành công");
     }
 
     private String getAdminReceiverId() {
