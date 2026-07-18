@@ -1,7 +1,7 @@
 package iuh.fit.notificationservice.application.port.websocket;
 
-import iuh.fit.notificationservice.domain.entity.Notification;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 
 public interface NotificationWebSocketPublisher {
-    void publish(Notification notification);
+    void publish(NotificationResponseCommand notification);
 }

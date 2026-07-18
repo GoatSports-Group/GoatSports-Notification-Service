@@ -1,5 +1,6 @@
-package iuh.fit.notificationservice.infrastructure.external.kafka.dto;
+package iuh.fit.notificationservice.application.dto.event;
 
+import iuh.fit.notificationservice.application.dto.event.type.OwnerApplicationEventType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -20,4 +20,20 @@ public class NotificationConverter {
                 .readAt(command.readAt())
                 .build();
     }
+
+    public static NotificationResponseCommand toResponseCommand(NotificationResponse response) {
+        if (response == null) return null;
+
+        return new NotificationResponseCommand(
+                response.getNotificationId(),
+                response.getReceiverId(),
+                response.getTitle(),
+                response.getContent(),
+                response.getType(),
+                response.getStatus(),
+                response.getReferenceId(),
+                response.getCreatedAt(),
+                response.getReadAt()
+        );
+    }
 }

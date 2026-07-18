@@ -5,6 +5,7 @@ import iuh.fit.notificationservice.application.dto.request.CreateNotificationCom
 import iuh.fit.notificationservice.application.dto.request.GetNotificationsCommand;
 import iuh.fit.notificationservice.application.dto.request.MarkNotificationReadCommand;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.exception.ServiceException;
 import iuh.fit.notificationservice.application.service.NotificationService;
 import iuh.fit.notificationservice.application.service.impl.NotificationServiceImpl;
@@ -29,6 +30,11 @@ public class NotificationDecorator implements NotificationService {
     @Transactional(rollbackFor = ServiceException.class)
     public Notification createNotification(CreateNotificationCommand command) throws ServiceException {
         return notificationServiceImpl.createNotification(command);
+    }
+
+    @Override
+    public void notifyUser(NotificationResponseCommand notification) {
+        notificationServiceImpl.notifyUser(notification);
     }
 
     @Override

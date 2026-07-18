@@ -5,6 +5,7 @@ import iuh.fit.notificationservice.application.dto.request.CreateNotificationCom
 import iuh.fit.notificationservice.application.dto.request.GetNotificationsCommand;
 import iuh.fit.notificationservice.application.dto.request.MarkNotificationReadCommand;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.exception.ServiceException;
 import iuh.fit.notificationservice.application.port.persistence.NotificationRepository;
 import iuh.fit.notificationservice.application.port.websocket.NotificationWebSocketPublisher;
@@ -50,11 +51,12 @@ public class NotificationServiceImpl implements NotificationService {
                 .referenceId(command.referenceId())
                 .build();
 
-        Notification saved = notificationRepository.save(notification);
+        return notificationRepository.save(notification);
+    }
 
-        webSocketPublisher.publish(saved);
-
-        return saved;
+    @Override
+    public void notifyUser(NotificationResponseCommand notification) {
+        webSocketPublisher.publish(notification);
     }
 
     @Override
