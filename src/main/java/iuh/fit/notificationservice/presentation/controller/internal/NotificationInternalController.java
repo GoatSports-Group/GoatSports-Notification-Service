@@ -39,7 +39,7 @@ public class NotificationInternalController {
 
             event.getEventType() == OwnerApplicationEventType.REJECTED
                     ? BaseUtil.getContentForOwnerApplication(event.getEventType())
-                    + " Lý do: " + event.getData().getRejectReason()
+                        + " Lý do: " + event.getData().getRejectReason()
                     :  BaseUtil.getContentForOwnerApplication(event.getEventType()),
 
             "OWNER_APPLICATION",
