@@ -8,7 +8,7 @@ public class NotificationMapper {
     public static NotificationEntity toEntity(Notification domain) {
         if (domain == null) return null;
 
-        return NotificationEntity.builder()
+        NotificationEntity entity = NotificationEntity.builder()
                 .notificationId(domain.getNotificationId())
                 .receiverId(domain.getReceiverId())
                 .title(domain.getTitle())
@@ -18,6 +18,8 @@ public class NotificationMapper {
                 .referenceId(domain.getReferenceId())
                 .readAt(domain.getReadAt() != null ? domain.getReadAt() : null)
                 .build();
+        entity.setCreatedAt(domain.getCreatedAt());
+        return entity;
     }
 
     public static Notification toDomain(NotificationEntity entity) {
