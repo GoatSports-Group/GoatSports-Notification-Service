@@ -4,42 +4,24 @@ import iuh.fit.notificationservice.application.dto.response.notification.Notific
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationSummaryResponseCommand;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
 import iuh.fit.notificationservice.domain.entity.Notification;
+import org.mapstruct.Mapper;
 
-public class NotificationMapper {
+import java.util.List;
 
-    public static NotificationResponseCommand toNotificationResponseCommand(Notification notification) {
-        if (notification == null) return null;
+@Mapper(componentModel = "spring")
+public interface NotificationMapper {
 
-        return new NotificationResponseCommand(
-                notification.getNotificationId(),
-                notification.getReceiverId(),
-                notification.getTitle(),
-                notification.getContent(),
-                notification.getType().name(),
-                notification.getStatus().name(),
-                notification.getReferenceId(),
-                notification.getCreatedAt(),
-                notification.getReadAt()
-        );
-    }
+    NotificationResponseCommand toNotificationResponseCommand(Notification notification);
 
-    public static NotificationSummaryResponseCommand toNotificationSummaryResponseCommand(Notification notification) {
-        if (notification == null) return null;
+    NotificationSummaryResponseCommand toNotificationSummaryResponseCommand(Notification notification);
 
-        return new NotificationSummaryResponseCommand(
-                notification.getNotificationId(),
-                notification.getTitle(),
-                notification.getType().name(),
-                notification.getStatus().name(),
-                notification.getCreatedAt()
-        );
-    }
+    List<NotificationResponseCommand> toNotificationResponseCommandList(List<Notification> notifications);
 
-    public static PageResult<NotificationResponseCommand> toNotificationResponseCommand(PageResult<Notification> pageResult) {
+    default PageResult<NotificationResponseCommand> toNotificationResponseCommand(PageResult<Notification> pageResult) {
         if (pageResult == null) return null;
 
         return new PageResult<>(
-                pageResult.items().stream().map(NotificationMapper::toNotificationResponseCommand).toList(),
+                toNotificationResponseCommandList(pageResult.items()),
                 pageResult.total(),
                 pageResult.page(),
                 pageResult.pageSize(),

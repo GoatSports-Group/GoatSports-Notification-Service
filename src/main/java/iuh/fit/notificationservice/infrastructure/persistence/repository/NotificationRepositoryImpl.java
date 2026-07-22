@@ -4,11 +4,12 @@ import com.turkraft.springfilter.converter.FilterSpecificationConverter;
 import com.turkraft.springfilter.parser.FilterParser;
 import iuh.fit.notificationservice.application.dto.PageFilter;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
+import iuh.fit.notificationservice.application.exception.ServiceException;
 import iuh.fit.notificationservice.application.port.persistence.NotificationRepository;
 import iuh.fit.notificationservice.domain.entity.Notification;
 import iuh.fit.notificationservice.domain.enums.NotificationStatus;
 import iuh.fit.notificationservice.infrastructure.persistence.entity.NotificationEntity;
-import iuh.fit.notificationservice.infrastructure.persistence.mapper.NotificationMapper;
+import iuh.fit.notificationservice.infrastructure.persistence.mapper.NotificationEntityMapper;
 import iuh.fit.notificationservice.infrastructure.persistence.repository.jpa.JpaNotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,17 +29,28 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     private final JpaNotificationRepository jpaRepository;
     private final FilterSpecificationConverter filterSpecificationConverter;
     private final FilterParser filterParser;
+    private final NotificationEntityMapper notificationEntityMapper;
 
     @Override
-    public Notification save(Notification notification) {
-        NotificationEntity entity = NotificationMapper.toEntity(notification);
+    public Notification save(Notification notification) throws ServiceException {
+        NotificationEntity entity;
+        if (notification.getNotificationId() != null) {
+            entity = jpaRepository.findById(notification.getNotificationId())
+                    .map(existing -> {
+                        notificationEntityMapper.updateEntity(notification, existing);
+                        return existing;
+                    })
+                    .orElseThrow(() -> new ServiceException("Thông báo không tồn tại."));
+        } else {
+            entity = notificationEntityMapper.createEntity(notification);
+        }
         NotificationEntity saved = jpaRepository.save(entity);
-        return NotificationMapper.toDomain(saved);
+        return notificationEntityMapper.toDomain(saved);
     }
 
     @Override
     public Optional<Notification> findById(UUID id) {
-        return jpaRepository.findById(id).map(NotificationMapper::toDomain);
+        return jpaRepository.findById(id).map(notificationEntityMapper::toDomain);
     }
 
     @Override
@@ -57,7 +69,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 
         Page<NotificationEntity> entityPage = jpaRepository.findAll(spec, pageable);
         List<Notification> items = entityPage.getContent().stream()
-                .map(NotificationMapper::toDomain)
+                .map(notificationEntityMapper::toDomain)
                 .toList();
 
         return new PageResult<>(

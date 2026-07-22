@@ -29,6 +29,8 @@ public class NotificationController {
 
         private final NotificationService notificationService;
         private final CurrentUserProvider currentUserProvider;
+        private final NotificationMapper notificationMapper;
+        private final NotificationConverter notificationConverter;
 
         @GetMapping
         public ResponseEntity<BaseListResponse> getAllNotifications(
@@ -36,14 +38,14 @@ public class NotificationController {
                         Pageable pageable) throws ServiceException {
                 String userIdStr = currentUserProvider.getCurrentUserId()
                                 .orElseThrow(() -> new ServiceException(
-                                                "Bạn phải đăng nhập để thực hiện chức năng này."));
+                                                 "Bạn phải đăng nhập để thực hiện chức năng này."));
                 UUID receiverId = BaseUtil.uuid(userIdStr);
 
                 PageFilter query = new PageFilter(filter, pageable.getPageNumber() + 1, pageable.getPageSize());
                 GetNotificationsCommand command = new GetNotificationsCommand(query, receiverId);
 
-                PageResult<NotificationResponseCommand> result = NotificationMapper.toNotificationResponseCommand(
-                                notificationService.getAllNotifications(command));
+                PageResult<NotificationResponseCommand> result = notificationMapper.toNotificationResponseCommand(
+                                 notificationService.getAllNotifications(command));
 
                 BaseListResponse.Meta meta = new BaseListResponse.Meta();
                 meta.setPage(result.page());
@@ -52,7 +54,7 @@ public class NotificationController {
                 meta.setTotal(result.total());
 
                 List<NotificationResponse> responses = result.items().stream()
-                                .map(NotificationConverter::toResponse)
+                                .map(notificationConverter::toResponse)
                                 .toList();
 
                 return ResponseEntity.ok(new BaseListResponse(meta, responses));
@@ -62,7 +64,7 @@ public class NotificationController {
         public ResponseEntity<Long> countUnreadNotifications() throws ServiceException {
                 String userIdStr = currentUserProvider.getCurrentUserId()
                                 .orElseThrow(() -> new ServiceException(
-                                                "Bạn phải đăng nhập để thực hiện chức năng này."));
+                                                 "Bạn phải đăng nhập để thực hiện chức năng này."));
                 UUID receiverId = BaseUtil.uuid(userIdStr);
 
                 CountUnreadNotificationCommand command = new CountUnreadNotificationCommand(receiverId);
@@ -77,9 +79,9 @@ public class NotificationController {
                 UUID notificationId = BaseUtil.uuid(id);
                 MarkNotificationReadCommand command = new MarkNotificationReadCommand(notificationId);
 
-                NotificationResponseCommand result = NotificationMapper.toNotificationResponseCommand(
-                                notificationService.markNotificationRead(command));
+                NotificationResponseCommand result = notificationMapper.toNotificationResponseCommand(
+                                 notificationService.markNotificationRead(command));
 
-                return ResponseEntity.ok(NotificationConverter.toResponse(result));
+                return ResponseEntity.ok(notificationConverter.toResponse(result));
         }
 }

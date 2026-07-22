@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class NotificationInternalController {
     private final NotificationService notificationService;
     private final CurrentUserProvider currentUserProvider;
+    private final NotificationMapper notificationMapper;
+    private final NotificationConverter notificationConverter;
 
     @PostMapping("/owner-applications")
     public ResponseEntity<NotificationResponse> createOwnerApplicationNotification(
@@ -48,18 +50,18 @@ public class NotificationInternalController {
                     ? event.getData().getUserId() : currentUserProvider.getAdminId()
         );
 
-        NotificationResponseCommand responseCommand = NotificationMapper.toNotificationResponseCommand(
+        NotificationResponseCommand responseCommand = notificationMapper.toNotificationResponseCommand(
                 notificationService.createNotification(command)
         );
 
-        NotificationResponse response = NotificationConverter.toResponse(responseCommand);
+        NotificationResponse response = notificationConverter.toResponse(responseCommand);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/notify")
     public ResponseEntity<Void> notifyUser(@RequestBody NotificationResponse notification) {
-        notificationService.notifyUser(NotificationConverter.toResponseCommand(notification));
+        notificationService.notifyUser(notificationConverter.toResponseCommand(notification));
 
         return ResponseEntity.ok().build();
     }
