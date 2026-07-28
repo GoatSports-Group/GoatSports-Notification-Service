@@ -2,7 +2,9 @@ package iuh.fit.notificationservice.application.service.impl;
 
 import iuh.fit.notificationservice.application.dto.request.CountUnreadNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.CreateNotificationCommand;
+import iuh.fit.notificationservice.application.dto.request.DeleteNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.GetNotificationsCommand;
+import iuh.fit.notificationservice.application.dto.request.MarkAllNotificationsReadCommand;
 import iuh.fit.notificationservice.application.dto.request.MarkNotificationReadCommand;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
@@ -77,5 +79,22 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setReadAt(LocalDateTime.now());
 
         return notificationRepository.save(notification);
+    }
+
+    @Override
+    public void markAllNotificationsRead(MarkAllNotificationsReadCommand command) {
+        notificationRepository.markAllReadByReceiverId(command.receiverId());
+    }
+
+    @Override
+    public void deleteNotification(DeleteNotificationCommand command) throws ServiceException {
+        Notification notification = notificationRepository.findById(command.notificationId())
+                .orElseThrow(() -> new ServiceException("Thông báo không tồn tại."));
+
+        if (!notification.getReceiverId().equals(command.requesterId())) {
+            throw new ServiceException("Bạn không có quyền xóa thông báo này.");
+        }
+
+        notificationRepository.deleteById(command.notificationId());
     }
 }

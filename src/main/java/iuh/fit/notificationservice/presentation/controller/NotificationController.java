@@ -2,7 +2,9 @@ package iuh.fit.notificationservice.presentation.controller;
 
 import iuh.fit.notificationservice.application.dto.PageFilter;
 import iuh.fit.notificationservice.application.dto.request.CountUnreadNotificationCommand;
+import iuh.fit.notificationservice.application.dto.request.DeleteNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.GetNotificationsCommand;
+import iuh.fit.notificationservice.application.dto.request.MarkAllNotificationsReadCommand;
 import iuh.fit.notificationservice.application.dto.request.MarkNotificationReadCommand;
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.dto.response.base.BaseListResponse;
@@ -83,5 +85,34 @@ public class NotificationController {
                                  notificationService.markNotificationRead(command));
 
                 return ResponseEntity.ok(notificationConverter.toResponse(result));
+        }
+
+        @PutMapping("/read-all")
+        public ResponseEntity<Void> markAllNotificationsRead() throws ServiceException {
+                String userIdStr = currentUserProvider.getCurrentUserId()
+                                .orElseThrow(() -> new ServiceException(
+                                                 "Bạn phải đăng nhập để thực hiện chức năng này."));
+                UUID receiverId = BaseUtil.uuid(userIdStr);
+
+                MarkAllNotificationsReadCommand command = new MarkAllNotificationsReadCommand(receiverId);
+                notificationService.markAllNotificationsRead(command);
+
+                return ResponseEntity.noContent().build();
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteNotification(
+                        @PathVariable("id") String id) throws ServiceException {
+                String userIdStr = currentUserProvider.getCurrentUserId()
+                                .orElseThrow(() -> new ServiceException(
+                                                 "Bạn phải đăng nhập để thực hiện chức năng này."));
+
+                UUID requesterId = BaseUtil.uuid(userIdStr);
+                UUID notificationId = BaseUtil.uuid(id);
+
+                DeleteNotificationCommand command = new DeleteNotificationCommand(notificationId, requesterId);
+                notificationService.deleteNotification(command);
+
+                return ResponseEntity.noContent().build();
         }
 }

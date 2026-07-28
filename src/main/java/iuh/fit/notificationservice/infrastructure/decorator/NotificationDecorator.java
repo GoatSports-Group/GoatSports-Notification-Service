@@ -1,9 +1,6 @@
 package iuh.fit.notificationservice.infrastructure.decorator;
 
-import iuh.fit.notificationservice.application.dto.request.CountUnreadNotificationCommand;
-import iuh.fit.notificationservice.application.dto.request.CreateNotificationCommand;
-import iuh.fit.notificationservice.application.dto.request.GetNotificationsCommand;
-import iuh.fit.notificationservice.application.dto.request.MarkNotificationReadCommand;
+import iuh.fit.notificationservice.application.dto.request.*;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.exception.ServiceException;
@@ -47,5 +44,15 @@ public class NotificationDecorator implements NotificationService {
     @Transactional(rollbackFor = ServiceException.class)
     public Notification markNotificationRead(MarkNotificationReadCommand command) throws ServiceException {
         return notificationServiceImpl.markNotificationRead(command);
+    }
+
+    @Override
+    public void markAllNotificationsRead(MarkAllNotificationsReadCommand command) {
+        notificationServiceImpl.markAllNotificationsRead(command);
+    }
+
+    @Override
+    public void deleteNotification(DeleteNotificationCommand command) throws ServiceException {
+        notificationServiceImpl.deleteNotification(command);
     }
 }

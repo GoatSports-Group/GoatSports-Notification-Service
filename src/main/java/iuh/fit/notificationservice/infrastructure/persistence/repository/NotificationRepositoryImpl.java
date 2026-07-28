@@ -17,7 +17,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -84,5 +86,24 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     @Override
     public long countUnread(UUID receiverId) {
         return jpaRepository.countByReceiverIdAndStatus(receiverId, NotificationStatus.UNREAD);
+    }
+
+    @Override
+    @Transactional
+    public void markAllReadByReceiverId(UUID receiverId) {
+        jpaRepository.markAllReadByReceiverId(
+                receiverId,
+                NotificationStatus.READ,
+                LocalDateTime.now()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(UUID id) throws ServiceException {
+        if (!jpaRepository.existsById(id)) {
+            throw new ServiceException("Thông báo không tồn tại.");
+        }
+        jpaRepository.deleteById(id);
     }
 }

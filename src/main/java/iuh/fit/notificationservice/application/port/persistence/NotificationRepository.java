@@ -16,4 +16,8 @@ public interface NotificationRepository {
     PageResult<Notification> findByReceiverId(PageFilter filter, UUID receiverId);
 
     long countUnread(UUID receiverId);
+
+    void markAllReadByReceiverId(UUID receiverId);
+
+    void deleteById(UUID id) throws ServiceException;
 }
