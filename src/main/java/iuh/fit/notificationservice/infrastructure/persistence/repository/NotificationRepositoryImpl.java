@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,7 +60,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     public PageResult<Notification> findByReceiverId(PageFilter filter, UUID receiverId) {
         int pageNum = Math.max(0, filter.page() - 1);
         int pageSize = filter.size() > 0 ? filter.size() : 10;
-        Pageable pageable = PageRequest.of(pageNum, pageSize);
+        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Specification<NotificationEntity> spec = (root, query, cb) ->
                 cb.equal(root.get("receiverId"), receiverId);
