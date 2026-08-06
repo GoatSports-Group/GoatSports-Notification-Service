@@ -11,6 +11,7 @@ import iuh.fit.notificationservice.application.service.NotificationService;
 import iuh.fit.notificationservice.application.util.BaseUtil;
 import iuh.fit.notificationservice.presentation.converter.NotificationConverter;
 import iuh.fit.notificationservice.presentation.response.NotificationResponse;
+import iuh.fit.shared.annotation.AuditLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ public class NotificationInternalController {
     private final NotificationConverter notificationConverter;
 
     @PostMapping("/owner-applications")
+    @AuditLog(action = "CREATE_NOTIFICATION", description = "Tạo thông báo tới người dùng #{#event.data.userId}")
     public ResponseEntity<NotificationResponse> createOwnerApplicationNotification(
             @RequestBody OwnerApplicationEvent event
     ) throws ServiceException

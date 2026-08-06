@@ -16,6 +16,7 @@ import iuh.fit.notificationservice.application.service.NotificationService;
 import iuh.fit.notificationservice.application.util.BaseUtil;
 import iuh.fit.notificationservice.presentation.converter.NotificationConverter;
 import iuh.fit.notificationservice.presentation.response.NotificationResponse;
+import iuh.fit.shared.annotation.AuditLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -76,8 +77,8 @@ public class NotificationController {
         }
 
         @PutMapping("/{id}/read")
-        public ResponseEntity<NotificationResponse> markNotificationRead(
-                        @PathVariable("id") String id) throws ServiceException {
+        @AuditLog(action = "READ_NOTIFICATION", description = "Đọc thông báo #{#id}")
+        public ResponseEntity<NotificationResponse> markNotificationRead(@PathVariable("id") String id) throws ServiceException {
                 UUID notificationId = BaseUtil.uuid(id);
                 MarkNotificationReadCommand command = new MarkNotificationReadCommand(notificationId);
 
@@ -88,6 +89,7 @@ public class NotificationController {
         }
 
         @PutMapping("/read-all")
+        @AuditLog(action = "READ_NOTIFICATIONS", description = "Đọc tất cả thông báo")
         public ResponseEntity<Void> markAllNotificationsRead() throws ServiceException {
                 String userIdStr = currentUserProvider.getCurrentUserId()
                                 .orElseThrow(() -> new ServiceException(
@@ -101,6 +103,7 @@ public class NotificationController {
         }
 
         @DeleteMapping("/{id}")
+        @AuditLog(action = "DELETE_NOTIFICATION", description = "Xóa thông báo #{#id}")
         public ResponseEntity<Void> deleteNotification(
                         @PathVariable("id") String id) throws ServiceException {
                 String userIdStr = currentUserProvider.getCurrentUserId()
