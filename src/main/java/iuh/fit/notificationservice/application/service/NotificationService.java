@@ -1,5 +1,6 @@
 package iuh.fit.notificationservice.application.service;
 
+import iuh.fit.notificationservice.application.dto.event.OwnerApplicationProgressChangedEvent;
 import iuh.fit.notificationservice.application.dto.request.CountUnreadNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.CreateNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.DeleteNotificationCommand;
@@ -25,4 +26,6 @@ public interface NotificationService {
     void markAllNotificationsRead(MarkAllNotificationsReadCommand command);
 
     void deleteNotification(DeleteNotificationCommand command) throws ServiceException;
+
+    void publishOwnerApplicationProgress(OwnerApplicationProgressChangedEvent event);
 }

@@ -1,5 +1,6 @@
 package iuh.fit.notificationservice.infrastructure.decorator;
 
+import iuh.fit.notificationservice.application.dto.event.OwnerApplicationProgressChangedEvent;
 import iuh.fit.notificationservice.application.dto.request.*;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
@@ -54,5 +55,10 @@ public class NotificationDecorator implements NotificationService {
     @Override
     public void deleteNotification(DeleteNotificationCommand command) throws ServiceException {
         notificationServiceImpl.deleteNotification(command);
+    }
+
+    @Override
+    public void publishOwnerApplicationProgress(OwnerApplicationProgressChangedEvent event) {
+        notificationServiceImpl.publishOwnerApplicationProgress(event);
     }
 }

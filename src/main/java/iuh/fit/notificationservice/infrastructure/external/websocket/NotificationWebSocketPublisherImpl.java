@@ -1,5 +1,6 @@
 package iuh.fit.notificationservice.infrastructure.external.websocket;
 
+import iuh.fit.notificationservice.application.dto.event.OwnerApplicationProgressChangedEvent;
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.port.websocket.NotificationWebSocketPublisher;
 import lombok.RequiredArgsConstructor;
@@ -32,5 +33,16 @@ public class NotificationWebSocketPublisherImpl implements NotificationWebSocket
         } catch (Exception e) {
             log.error("Lỗi đẩy thông báo đến websocket: {}", e.getMessage(), e);
         }
+    }
+
+    @Override
+    public void publishOwnerApplicationProgress(OwnerApplicationProgressChangedEvent event) {
+        String destination = "/topic/user/owner-application-progress/" + event.userId();
+        messagingTemplate.convertAndSend(destination, event);
+        log.info(
+                "Đã gửi cập nhật tiến trình đơn {} đến người dùng {}",
+                event.ownerApplicationId(),
+                event.userId()
+        );
     }
 }

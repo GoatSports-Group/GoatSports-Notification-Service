@@ -1,6 +1,7 @@
 package iuh.fit.notificationservice.presentation.controller.internal;
 
 import iuh.fit.notificationservice.application.dto.event.OwnerApplicationEvent;
+import iuh.fit.notificationservice.application.dto.event.OwnerApplicationProgressChangedEvent;
 import iuh.fit.notificationservice.application.dto.event.type.OwnerApplicationEventType;
 import iuh.fit.notificationservice.application.dto.request.CreateNotificationCommand;
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
@@ -65,6 +66,14 @@ public class NotificationInternalController {
     public ResponseEntity<Void> notifyUser(@RequestBody NotificationResponse notification) {
         notificationService.notifyUser(notificationConverter.toResponseCommand(notification));
 
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/owner-application-progress")
+    public ResponseEntity<Void> publish(
+            @RequestBody OwnerApplicationProgressChangedEvent event
+    ) {
+        notificationService.publishOwnerApplicationProgress(event);
         return ResponseEntity.ok().build();
     }
 }

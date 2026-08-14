@@ -1,5 +1,6 @@
 package iuh.fit.notificationservice.application.service.impl;
 
+import iuh.fit.notificationservice.application.dto.event.OwnerApplicationProgressChangedEvent;
 import iuh.fit.notificationservice.application.dto.request.CountUnreadNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.CreateNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.DeleteNotificationCommand;
@@ -96,5 +97,10 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         notificationRepository.deleteById(command.notificationId());
+    }
+
+    @Override
+    public void publishOwnerApplicationProgress(OwnerApplicationProgressChangedEvent event) {
+        webSocketPublisher.publishOwnerApplicationProgress(event);
     }
 }
