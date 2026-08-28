@@ -16,5 +16,4 @@ public class ApplicationServiceConfig {
     ) {
         return new NotificationServiceImpl(notificationRepository, webSocketPublisher);
     }
-
 }

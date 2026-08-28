@@ -14,8 +14,10 @@ import iuh.fit.notificationservice.application.port.persistence.NotificationRepo
 import iuh.fit.notificationservice.application.port.websocket.NotificationWebSocketPublisher;
 import iuh.fit.notificationservice.application.service.NotificationService;
 import iuh.fit.notificationservice.domain.entity.Notification;
+import iuh.fit.notificationservice.domain.enums.NotificationReferenceType;
 import iuh.fit.notificationservice.domain.enums.NotificationStatus;
 import iuh.fit.notificationservice.domain.enums.NotificationType;
+import iuh.fit.notificationservice.domain.enums.SourceService;
 
 import java.time.LocalDateTime;
 
@@ -39,8 +41,12 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Notification createNotification(CreateNotificationCommand command) throws ServiceException {
         NotificationType type;
+        SourceService sourceService;
+        NotificationReferenceType referenceType;
         try {
             type = NotificationType.valueOf(command.type());
+            sourceService = SourceService.valueOf(command.sourceService());
+            referenceType = NotificationReferenceType.valueOf(command.referenceType());
         } catch (IllegalArgumentException e) {
             throw new ServiceException("Loại thông báo không hợp lệ: " + command.type());
         }
@@ -51,6 +57,8 @@ public class NotificationServiceImpl implements NotificationService {
                 .content(command.content())
                 .type(type)
                 .status(NotificationStatus.UNREAD)
+                .sourceService(sourceService)
+                .referenceType(referenceType)
                 .referenceId(command.referenceId())
                 .build();
 

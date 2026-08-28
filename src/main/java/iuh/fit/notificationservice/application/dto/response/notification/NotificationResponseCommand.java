@@ -10,6 +10,8 @@ public record NotificationResponseCommand(
     String content,
     String type,
     String status,
+    String sourceService,
+    String referenceType,
     UUID referenceId,
     LocalDateTime createdAt,
     LocalDateTime readAt

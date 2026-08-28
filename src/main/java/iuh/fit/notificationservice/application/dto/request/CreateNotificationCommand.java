@@ -7,5 +7,7 @@ public record CreateNotificationCommand(
     String title,
     String content,
     String type,
+    String sourceService,
+    String referenceType,
     UUID referenceId
 ) {}

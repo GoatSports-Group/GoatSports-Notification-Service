@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="20260828-notification-align-domain" author="codex">
+        <addColumn tableName="notifications">
+            <column name="source_service" type="VARCHAR(255)" defaultValue="AUTH"/>
+            <column name="reference_type" type="VARCHAR(255)" defaultValue="SYSTEM"/>
+        </addColumn>
+
+        <addNotNullConstraint tableName="notifications" columnName="type"
+                              columnDataType="VARCHAR(255)" defaultNullValue="SYSTEM"/>
+        <addNotNullConstraint tableName="notifications" columnName="status"
+                              columnDataType="VARCHAR(255)" defaultNullValue="UNREAD"/>
+        <addNotNullConstraint tableName="notifications" columnName="source_service"
+                              columnDataType="VARCHAR(255)"/>
+        <addNotNullConstraint tableName="notifications" columnName="reference_type"
+                              columnDataType="VARCHAR(255)"/>
+        <dropDefaultValue tableName="notifications" columnName="source_service"
+                          columnDataType="VARCHAR(255)"/>
+        <dropDefaultValue tableName="notifications" columnName="reference_type"
+                          columnDataType="VARCHAR(255)"/>
+    </changeSet>
+</databaseChangeLog>

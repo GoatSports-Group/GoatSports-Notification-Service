@@ -1,17 +1,18 @@
 package iuh.fit.notificationservice.domain.enums;
 
-import lombok.Getter;
-
-@Getter
 public enum NotificationType {
-    OWNER_APPLICATION("Đơn đăng ký"),
-    SYSTEM("Hệ thống"),
-    USER("Người dùng"),
-    BOOKING("Đặt lịch"),
-    PAYMENT("Thanh toán");
-
-    private final String value;
-    NotificationType(String value) {
-        this.value = value;
-    }
+    OWNER_APPLICATION,
+    BOOKING,
+    CHECK_IN,
+    REVIEW,
+    PAYMENT,
+    REFUND,
+    MATCHMAKING,
+    FRIENDSHIP,
+    MESSAGE,
+    CONTENT_MODERATION,
+    CLUB,
+    CLUB_FEE,
+    TOURNAMENT,
+    SYSTEM
 }

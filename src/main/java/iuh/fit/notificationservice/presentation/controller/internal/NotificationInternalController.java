@@ -48,9 +48,9 @@ public class NotificationInternalController {
                     :  BaseUtil.getContentForOwnerApplication(event.getEventType()),
 
             "OWNER_APPLICATION",
-
-            event.getEventType() == OwnerApplicationEventType.SUBMITTED
-                    ? event.getData().getUserId() : currentUserProvider.getAdminId()
+            "VENUE",
+            "OWNER_APPLICATION",
+            event.getData().getOwnerApplicationId()
         );
 
         NotificationResponseCommand responseCommand = notificationMapper.toNotificationResponseCommand(

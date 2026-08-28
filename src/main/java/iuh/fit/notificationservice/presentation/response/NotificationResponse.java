@@ -19,6 +19,8 @@ public class NotificationResponse {
     private String content;
     private String type;
     private String status;
+    private String sourceService;
+    private String referenceType;
     private UUID referenceId;
     private LocalDateTime createdAt;
     private LocalDateTime readAt;
