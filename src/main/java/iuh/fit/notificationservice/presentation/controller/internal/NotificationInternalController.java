@@ -12,7 +12,9 @@ import iuh.fit.notificationservice.application.service.NotificationService;
 import iuh.fit.notificationservice.application.util.BaseUtil;
 import iuh.fit.notificationservice.presentation.converter.NotificationConverter;
 import iuh.fit.notificationservice.presentation.response.NotificationResponse;
+import iuh.fit.notificationservice.presentation.request.CreateNotificationRequest;
 import iuh.fit.shared.annotation.AuditLog;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,25 @@ public class NotificationInternalController {
     private final CurrentUserProvider currentUserProvider;
     private final NotificationMapper notificationMapper;
     private final NotificationConverter notificationConverter;
+
+    @PostMapping
+    public ResponseEntity<NotificationResponse> createNotification(
+            @Valid @RequestBody CreateNotificationRequest request
+    ) throws ServiceException {
+        CreateNotificationCommand command = new CreateNotificationCommand(
+                request.receiverId(),
+                request.title(),
+                request.content(),
+                request.type(),
+                request.sourceService(),
+                request.referenceType(),
+                request.referenceId()
+        );
+        NotificationResponseCommand result = notificationMapper.toNotificationResponseCommand(
+                notificationService.createNotification(command)
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(notificationConverter.toResponse(result));
+    }
 
     @PostMapping("/owner-applications")
     @AuditLog(action = "CREATE_NOTIFICATION", description = "Tạo thông báo tới người dùng #{#event.data.userId}")
