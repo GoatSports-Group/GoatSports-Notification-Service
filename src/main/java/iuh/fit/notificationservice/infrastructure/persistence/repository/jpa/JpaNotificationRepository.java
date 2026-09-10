@@ -22,11 +22,12 @@ public interface JpaNotificationRepository extends JpaRepository<NotificationEnt
     @Query("""
             UPDATE NotificationEntity n
             SET n.status = :status, n.readAt = :readAt
-            WHERE n.receiverId = :receiverId AND n.status = iuh.fit.notificationservice.domain.enums.NotificationStatus.UNREAD
+            WHERE n.receiverId = :receiverId AND n.status = :unreadStatus
             """)
     void markAllReadByReceiverId(
             @Param("receiverId") UUID receiverId,
             @Param("status") NotificationStatus status,
+            @Param("unreadStatus") NotificationStatus unreadStatus,
             @Param("readAt") LocalDateTime readAt
     );
 }

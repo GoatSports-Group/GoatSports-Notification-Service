@@ -95,6 +95,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         jpaRepository.markAllReadByReceiverId(
                 receiverId,
                 NotificationStatus.READ,
+                NotificationStatus.UNREAD,
                 LocalDateTime.now()
         );
     }
