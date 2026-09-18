@@ -10,6 +10,7 @@ import iuh.fit.notificationservice.application.dto.request.MarkNotificationReadC
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.exception.ServiceException;
+import iuh.fit.notificationservice.application.mapper.NotificationMapper;
 import iuh.fit.notificationservice.application.port.persistence.NotificationRepository;
 import iuh.fit.notificationservice.application.port.websocket.NotificationWebSocketPublisher;
 import iuh.fit.notificationservice.application.service.NotificationService;
@@ -25,12 +26,15 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationWebSocketPublisher webSocketPublisher;
+    private final NotificationMapper notificationMapper;
 
     public NotificationServiceImpl(
             NotificationRepository notificationRepository,
-            NotificationWebSocketPublisher webSocketPublisher) {
+            NotificationWebSocketPublisher webSocketPublisher,
+            NotificationMapper notificationMapper) {
         this.notificationRepository = notificationRepository;
         this.webSocketPublisher = webSocketPublisher;
+        this.notificationMapper = notificationMapper;
     }
 
     @Override
@@ -62,7 +66,9 @@ public class NotificationServiceImpl implements NotificationService {
                 .referenceId(command.referenceId())
                 .build();
 
-        return notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        webSocketPublisher.publish(notificationMapper.toNotificationResponseCommand(saved));
+        return saved;
     }
 
     @Override
