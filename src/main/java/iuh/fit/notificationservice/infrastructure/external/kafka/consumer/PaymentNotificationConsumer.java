@@ -1,0 +1,122 @@
+package iuh.fit.notificationservice.infrastructure.external.kafka.consumer;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import iuh.fit.notificationservice.application.dto.request.CreateNotificationCommand;
+import iuh.fit.notificationservice.application.port.persistence.NotificationRepository;
+import iuh.fit.notificationservice.application.service.NotificationService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+import java.util.UUID;
+
+/**
+ * PAY-07: biến payment/refund event thành notification inbox.
+ * Dedupe bằng eventId (NOT-03) để consumer retry không sinh thông báo trùng.
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+@ConditionalOnProperty(
+        prefix = "payment.events",
+        name = "notification-consumer-enabled",
+        havingValue = "true"
+)
+public class PaymentNotificationConsumer {
+    private final ObjectMapper objectMapper;
+    private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
+
+    @KafkaListener(
+            topics = "${payment.events.topic}",
+            groupId = "${payment.events.notification-group-id}",
+            containerFactory = "stringListenerContainerFactory"
+    )
+    public void consume(String message) {
+        try {
+            JsonNode envelope = objectMapper.readTree(message);
+            String eventType = envelope.path("eventType").asText();
+            UUID eventId = uuid(envelope, "eventId");
+            if (eventId == null) {
+                log.warn("Bỏ qua payment event không có eventId: {}", eventType);
+                return;
+            }
+            if (notificationRepository.existsByEventId(eventId)) {
+                log.debug("Bỏ qua notification trùng eventId {}", eventId);
+                return;
+            }
+
+            NotificationContent content = contentFor(eventType);
+            if (content == null) return;
+
+            JsonNode payload = envelope.path("payload");
+            UUID receiverId = uuid(payload, "payerId");
+            if (receiverId == null) {
+                log.warn("Payment event {} không có payerId, bỏ qua", eventType);
+                return;
+            }
+
+            notificationService.createNotification(new CreateNotificationCommand(
+                    eventId,
+                    receiverId,
+                    content.title(),
+                    content.body(),
+                    content.type(),
+                    "PAYMENT",
+                    content.referenceType(),
+                    uuid(payload, "referenceId")
+            ));
+        } catch (Exception exception) {
+            log.error("Không xử lý được payment event cho notification: {}", exception.getMessage(), exception);
+        }
+    }
+
+    private NotificationContent contentFor(String eventType) {
+        return switch (eventType) {
+            case "payment.succeeded.v1" -> new NotificationContent(
+                    "Thanh toán thành công",
+                    "Giao dịch của bạn đã được xác nhận.",
+                    "PAYMENT", "PAYMENT");
+            case "payment.failed.v1" -> new NotificationContent(
+                    "Thanh toán thất bại",
+                    "Giao dịch không thành công. Vui lòng thử lại.",
+                    "PAYMENT", "PAYMENT");
+            case "payment.expired.v1" -> new NotificationContent(
+                    "Phiên thanh toán hết hạn",
+                    "Bạn chưa hoàn tất thanh toán trong thời gian giữ chỗ.",
+                    "PAYMENT", "PAYMENT");
+            case "payment.cancelled.v1" -> new NotificationContent(
+                    "Thanh toán đã huỷ",
+                    "Giao dịch đã được huỷ.",
+                    "PAYMENT", "PAYMENT");
+            case "refund.succeeded.v1" -> new NotificationContent(
+                    "Hoàn tiền thành công",
+                    "Khoản hoàn tiền của bạn đã được xử lý.",
+                    "REFUND", "REFUND");
+            case "refund.failed.v1" -> new NotificationContent(
+                    "Hoàn tiền thất bại",
+                    "Khoản hoàn tiền chưa xử lý được. Bộ phận hỗ trợ sẽ liên hệ với bạn.",
+                    "REFUND", "REFUND");
+            case "refund.manual-review.v1" -> new NotificationContent(
+                    "Hoàn tiền đang được rà soát",
+                    "Yêu cầu hoàn tiền của bạn đang được kiểm tra thủ công.",
+                    "REFUND", "REFUND");
+            default -> null;
+        };
+    }
+
+    private UUID uuid(JsonNode node, String field) {
+        JsonNode value = node.path(field);
+        if (value.isMissingNode() || value.isNull() || value.asText().isBlank()) return null;
+        try {
+            return UUID.fromString(value.asText());
+        } catch (IllegalArgumentException exception) {
+            return null;
+        }
+    }
+
+    private record NotificationContent(String title, String body, String type, String referenceType) {}
+}

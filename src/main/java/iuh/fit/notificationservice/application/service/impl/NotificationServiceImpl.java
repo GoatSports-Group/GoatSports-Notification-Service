@@ -56,6 +56,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         Notification notification = Notification.builder()
+                .eventId(command.eventId())
                 .receiverId(command.receiverId())
                 .title(command.title())
                 .content(command.content())

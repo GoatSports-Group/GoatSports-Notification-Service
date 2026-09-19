@@ -30,4 +30,6 @@ public interface JpaNotificationRepository extends JpaRepository<NotificationEnt
             @Param("unreadStatus") NotificationStatus unreadStatus,
             @Param("readAt") LocalDateTime readAt
     );
+
+    boolean existsByEventId(UUID eventId);
 }

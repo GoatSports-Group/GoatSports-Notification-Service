@@ -22,6 +22,9 @@ public class NotificationEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "UUID")
     private UUID notificationId;
+    /** Dedupe domain event: cùng eventId chỉ sinh một notification. */
+    @Column(name = "event_id", unique = true)
+    private UUID eventId;
     @Column(name = "receiver_id", nullable = false)
     private UUID receiverId;
     @Column(nullable = false)

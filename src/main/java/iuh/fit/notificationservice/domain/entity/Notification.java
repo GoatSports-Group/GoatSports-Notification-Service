@@ -17,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Notification extends BaseEntity {
     private UUID notificationId;
+    private UUID eventId;
     private UUID receiverId;
     private String title;
     private String content;

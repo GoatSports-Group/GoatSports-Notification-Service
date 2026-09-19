@@ -7,4 +7,5 @@
 >
     <include file="/db/changelog/schema/26-06-2026/init-schema.xml"/>
     <include file="/db/changelog/schema/28-08-2026/align-notification-domain-model.xml"/>
+    <include file="/db/changelog/schema/19-09-2026/add-notification-event-dedupe.xml"/>
 </databaseChangeLog>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <!--
+      NOT-03: dedupe theo eventId của domain event.
+      Cột nullable vì notification tạo trực tiếp qua internal API không gắn với event nào;
+      PostgreSQL cho phép nhiều NULL trong unique constraint nên các bản ghi cũ không bị ảnh hưởng.
+    -->
+    <changeSet id="20260919-notification-event-dedupe" author="claude">
+        <addColumn tableName="notifications">
+            <column name="event_id" type="UUID"/>
+        </addColumn>
+
+        <addUniqueConstraint tableName="notifications"
+                             columnNames="event_id"
+                             constraintName="uc_notifications_event_id"/>
+    </changeSet>
+</databaseChangeLog>

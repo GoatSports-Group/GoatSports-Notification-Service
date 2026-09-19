@@ -37,6 +37,7 @@ public class NotificationInternalController {
             @Valid @RequestBody CreateNotificationRequest request
     ) throws ServiceException {
         CreateNotificationCommand command = new CreateNotificationCommand(
+                null,
                 request.receiverId(),
                 request.title(),
                 request.content(),
@@ -58,6 +59,8 @@ public class NotificationInternalController {
     ) throws ServiceException
     {
         CreateNotificationCommand command = new CreateNotificationCommand(
+            null,
+
             event.getEventType() == OwnerApplicationEventType.SUBMITTED
                     ? currentUserProvider.getAdminId() : event.getData().getUserId(),
 

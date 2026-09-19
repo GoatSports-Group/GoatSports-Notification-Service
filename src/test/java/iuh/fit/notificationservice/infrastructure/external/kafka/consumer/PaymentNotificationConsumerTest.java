@@ -1,0 +1,108 @@
+package iuh.fit.notificationservice.infrastructure.external.kafka.consumer;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import iuh.fit.notificationservice.application.dto.request.CreateNotificationCommand;
+import iuh.fit.notificationservice.application.port.persistence.NotificationRepository;
+import iuh.fit.notificationservice.application.service.NotificationService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class PaymentNotificationConsumerTest {
+    @Mock NotificationService notificationService;
+    @Mock NotificationRepository notificationRepository;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private PaymentNotificationConsumer consumer() {
+        return new PaymentNotificationConsumer(objectMapper, notificationService, notificationRepository);
+    }
+
+    private String envelope(String eventType, UUID eventId, UUID payerId, UUID referenceId) {
+        return """
+                {
+                  "eventId": "%s",
+                  "eventType": "%s",
+                  "producer": "payment-service",
+                  "payload": { "payerId": "%s", "referenceId": "%s", "referenceType": "BOOKING" }
+                }
+                """.formatted(eventId, eventType, payerId, referenceId);
+    }
+
+    @Test
+    void paymentSucceededCreatesPaymentNotificationCarryingEventId() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        UUID payerId = UUID.randomUUID();
+        UUID referenceId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume(envelope("payment.succeeded.v1", eventId, payerId, referenceId));
+
+        ArgumentCaptor<CreateNotificationCommand> captor =
+                ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        verify(notificationService).createNotification(captor.capture());
+
+        CreateNotificationCommand command = captor.getValue();
+        assertThat(command.eventId()).isEqualTo(eventId);
+        assertThat(command.receiverId()).isEqualTo(payerId);
+        assertThat(command.type()).isEqualTo("PAYMENT");
+        assertThat(command.sourceService()).isEqualTo("PAYMENT");
+        assertThat(command.referenceId()).isEqualTo(referenceId);
+    }
+
+    @Test
+    void refundSucceededIsMappedToRefundNotification() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume(envelope("refund.succeeded.v1", eventId, UUID.randomUUID(), UUID.randomUUID()));
+
+        ArgumentCaptor<CreateNotificationCommand> captor =
+                ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        verify(notificationService).createNotification(captor.capture());
+        assertThat(captor.getValue().type()).isEqualTo("REFUND");
+        assertThat(captor.getValue().referenceType()).isEqualTo("REFUND");
+    }
+
+    @Test
+    void duplicateEventIdIsSkipped() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(true);
+
+        consumer().consume(envelope("payment.succeeded.v1", eventId, UUID.randomUUID(), UUID.randomUUID()));
+
+        verify(notificationService, never()).createNotification(any());
+    }
+
+    @Test
+    void unmappedEventTypeCreatesNoNotification() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume(envelope("payment.reconciled.v1", eventId, UUID.randomUUID(), UUID.randomUUID()));
+
+        verify(notificationService, never()).createNotification(any());
+    }
+
+    @Test
+    void eventWithoutEventIdIsIgnoredInsteadOfCreatingUndedupableNotification() throws Exception {
+        String message = """
+                { "eventType": "payment.succeeded.v1", "payload": { "payerId": "%s" } }
+                """.formatted(UUID.randomUUID());
+
+        consumer().consume(message);
+
+        verify(notificationService, never()).createNotification(any());
+    }
+}

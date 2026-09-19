@@ -35,6 +35,11 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     private final NotificationEntityMapper notificationEntityMapper;
 
     @Override
+    public boolean existsByEventId(UUID eventId) {
+        return eventId != null && jpaRepository.existsByEventId(eventId);
+    }
+
+    @Override
     public Notification save(Notification notification) throws ServiceException {
         NotificationEntity entity;
         if (notification.getNotificationId() != null) {

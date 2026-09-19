@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface NotificationRepository {
     Notification save(Notification notification) throws ServiceException;
 
+    boolean existsByEventId(UUID eventId);
+
     Optional<Notification> findById(UUID id);
 
     PageResult<Notification> findByReceiverId(PageFilter filter, UUID receiverId);
