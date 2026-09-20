@@ -26,6 +26,12 @@ public class ClubNotificationConsumer {
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
 
+    private static final java.util.Set<String> SUPPORTED = java.util.Set.of(
+            "club.activity.created.v1",
+            "club.membership.requested.v1",
+            "club.membership.approved.v1",
+            "club.membership.rejected.v1");
+
     @KafkaListener(
             topics = "${club.events.topic}",
             groupId = "${club.events.notification-group-id}",
@@ -35,7 +41,7 @@ public class ClubNotificationConsumer {
         try {
             JsonNode envelope = objectMapper.readTree(message);
             String eventType = envelope.path("eventType").asText();
-            if (!"club.activity.created.v1".equals(eventType)) return;
+            if (!SUPPORTED.contains(eventType)) return;
 
             UUID eventId = uuid(envelope, "eventId");
             if (eventId == null) {
@@ -55,21 +61,42 @@ public class ClubNotificationConsumer {
             }
 
             String clubName = text(payload, "clubName", "Câu lạc bộ");
-            String title = text(payload, "title", "hoạt động mới");
+            notificationService.createNotification(switch (eventType) {
+                case "club.activity.created.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        "Hoạt động mới của " + clubName,
+                        clubName + " vừa thêm hoạt động \"" + text(payload, "title", "hoạt động mới") + "\".",
+                        "CLUB", "CLUB", "CLUB_ACTIVITY", uuid(payload, "activityId"));
 
-            notificationService.createNotification(new CreateNotificationCommand(
-                    eventId,
-                    receiverId,
-                    "Hoạt động mới của " + clubName,
-                    clubName + " vừa thêm hoạt động \"" + title + "\".",
-                    "CLUB",
-                    "CLUB",
-                    "CLUB_ACTIVITY",
-                    uuid(payload, "activityId")
-            ));
+                case "club.membership.requested.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        "Yêu cầu tham gia " + clubName,
+                        requesterLabel(payload) + " muốn tham gia " + clubName + ". Vào duyệt giúp nhé.",
+                        "CLUB", "CLUB", "CLUB", uuid(payload, "clubId"));
+
+                case "club.membership.approved.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        "Đã được duyệt vào " + clubName,
+                        "Yêu cầu tham gia " + clubName + " của bạn đã được chấp nhận.",
+                        "CLUB", "CLUB", "CLUB", uuid(payload, "clubId"));
+
+                case "club.membership.rejected.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        "Yêu cầu tham gia bị từ chối",
+                        clubName + " đã từ chối yêu cầu tham gia của bạn.",
+                        "CLUB", "CLUB", "CLUB", uuid(payload, "clubId"));
+
+                default -> throw new IllegalStateException("Loại sự kiện chưa hỗ trợ: " + eventType);
+            });
         } catch (Exception exception) {
             log.error("Không xử lý được club event cho notification: {}", exception.getMessage(), exception);
         }
+    }
+
+    /** Người xin vào có thể chưa có tên hiển thị; khi đó client tự tra theo requesterId. */
+    private String requesterLabel(JsonNode payload) {
+        String name = payload.path("requesterName").asText(null);
+        return name == null || name.isBlank() ? "Một người chơi" : name;
     }
 
     private UUID uuid(JsonNode node, String field) {
