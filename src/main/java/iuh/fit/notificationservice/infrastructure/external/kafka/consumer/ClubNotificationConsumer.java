@@ -43,6 +43,13 @@ public class ClubNotificationConsumer {
     public void consume(String message) {
         try {
             JsonNode envelope = objectMapper.readTree(message);
+            if (envelope != null && envelope.isTextual()) {
+                envelope = objectMapper.readTree(envelope.asText());
+            }
+            if (envelope == null || !envelope.isObject()) {
+                log.warn("Bỏ qua club event không phải JSON object");
+                return;
+            }
             String eventType = envelope.path("eventType").asText();
             if (!SUPPORTED.contains(eventType)) return;
 
@@ -69,13 +76,13 @@ public class ClubNotificationConsumer {
                         eventId, receiverId,
                         "Hoạt động mới của " + clubName,
                         clubName + " vừa thêm hoạt động \"" + text(payload, "title", "hoạt động mới") + "\".",
-                        "CLUB", "CLUB", "CLUB_ACTIVITY", uuid(payload, "activityId"));
+                        "CLUB", "CLUB", "CLUB_ACTIVITY", uuid(payload, "clubId"));
 
                 case "club.membership.requested.v1" -> new CreateNotificationCommand(
                         eventId, receiverId,
                         "Yêu cầu tham gia " + clubName,
                         requesterLabel(payload) + " muốn tham gia " + clubName + ". Vào duyệt giúp nhé.",
-                        "CLUB", "CLUB", "CLUB", uuid(payload, "clubId"));
+                        "CLUB", "CLUB", "CLUB_MEMBERSHIP_REQUEST", uuid(payload, "clubId"));
 
                 case "club.membership.approved.v1" -> new CreateNotificationCommand(
                         eventId, receiverId,
@@ -87,13 +94,13 @@ public class ClubNotificationConsumer {
                         eventId, receiverId,
                         "Yêu cầu tham gia bị từ chối",
                         clubName + " đã từ chối yêu cầu tham gia của bạn.",
-                        "CLUB", "CLUB", "CLUB", uuid(payload, "clubId"));
+                        "CLUB", "CLUB", "CLUB_PUBLIC", uuid(payload, "clubId"));
 
                 case "club.invitation.sent.v1" -> new CreateNotificationCommand(
                         eventId, receiverId,
                         "Lời mời tham gia " + clubName,
                         clubName + " đã mời bạn tham gia câu lạc bộ.",
-                        "CLUB", "CLUB", "CLUB", uuid(payload, "clubId"));
+                        "CLUB", "CLUB", "CLUB_INVITATION", uuid(payload, "clubId"));
 
                 case "club.invitation.accepted.v1" -> new CreateNotificationCommand(
                         eventId, receiverId,

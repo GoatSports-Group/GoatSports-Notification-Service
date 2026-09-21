@@ -19,19 +19,32 @@ public class NotificationWebSocketPublisherImpl implements NotificationWebSocket
 
     @Override
     public void publish(NotificationResponseCommand notification) {
-        log.info("Đẩy thông báo đến websocket: ID={}, Title={}", notification.notificationId(), notification.title());
-        try {
-            String adminId = authClient.getAdmin();
+        if (notification.receiverId() == null) {
+            log.warn("Skipping WebSocket notification {} because receiverId is missing", notification.notificationId());
+            return;
+        }
 
-            if (notification.receiverId() != null && notification.receiverId().toString().equalsIgnoreCase(adminId)) {
+        log.info("Publishing WebSocket notification: ID={}, Title={}", notification.notificationId(), notification.title());
+        try {
+            if (isAdminReceiver(notification.receiverId().toString())) {
                 messagingTemplate.convertAndSend("/topic/admin/notifications", notification);
             } else {
                 messagingTemplate.convertAndSend("/topic/user/notifications/" + notification.receiverId(), notification);
             }
-            
-            log.info("Gửi thông báo thành công: ID={}, Title={}", notification.notificationId(), notification.title());
+
+            log.info("WebSocket notification sent: ID={}, Title={}", notification.notificationId(), notification.title());
         } catch (Exception e) {
-            log.error("Lỗi đẩy thông báo đến websocket: {}", e.getMessage(), e);
+            log.error("Failed to publish WebSocket notification: {}", e.getMessage(), e);
+        }
+    }
+
+    private boolean isAdminReceiver(String receiverId) {
+        try {
+            String adminId = authClient.getAdmin();
+            return adminId != null && receiverId.equalsIgnoreCase(adminId);
+        } catch (Exception e) {
+            log.warn("Could not resolve the admin account; using the user notification topic: {}", e.getMessage());
+            return false;
         }
     }
 
