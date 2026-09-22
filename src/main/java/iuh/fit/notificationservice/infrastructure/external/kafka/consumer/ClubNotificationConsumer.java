@@ -33,7 +33,9 @@ public class ClubNotificationConsumer {
             "club.membership.rejected.v1",
             "club.invitation.sent.v1",
             "club.invitation.accepted.v1",
-            "club.invitation.declined.v1");
+            "club.invitation.declined.v1",
+            "club.disbanded.v1",
+            "club.ownership.transferred.v1");
 
     @KafkaListener(
             topics = "${club.events.topic}",
@@ -112,6 +114,19 @@ public class ClubNotificationConsumer {
                         eventId, receiverId,
                         "Lời mời bị từ chối",
                         "Người bạn mời đã từ chối tham gia " + clubName + ".",
+                        "CLUB", "CLUB", "CLUB", uuid(payload, "clubId"));
+
+                case "club.disbanded.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        clubName + " đã giải tán",
+                        "Chủ câu lạc bộ đã giải tán " + clubName
+                                + ". Bạn không còn là thành viên của câu lạc bộ này.",
+                        "CLUB", "CLUB", "CLUB_PUBLIC", uuid(payload, "clubId"));
+
+                case "club.ownership.transferred.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        "Bạn là chủ mới của " + clubName,
+                        "Quyền sở hữu " + clubName + " đã được chuyển cho bạn.",
                         "CLUB", "CLUB", "CLUB", uuid(payload, "clubId"));
 
                 default -> throw new IllegalStateException("Loại sự kiện chưa hỗ trợ: " + eventType);

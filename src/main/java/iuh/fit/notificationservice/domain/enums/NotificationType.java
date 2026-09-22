@@ -12,7 +12,6 @@ public enum NotificationType {
     MESSAGE,
     CONTENT_MODERATION,
     CLUB,
-    CLUB_FEE,
     TOURNAMENT,
     SYSTEM
 }

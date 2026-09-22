@@ -101,4 +101,33 @@ class ClubNotificationConsumerTest {
         assertThat(captor.getValue().receiverId()).isEqualTo(receiverId);
         assertThat(captor.getValue().referenceType()).isEqualTo("CLUB_MEMBERSHIP_REQUEST");
     }
+
+    @Test
+    void disbandedClubNotifiesMembersAndPointsAtThePublicView() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        UUID clubId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume(envelope("club.disbanded.v1", eventId, UUID.randomUUID(), clubId));
+
+        ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        verify(notificationService).createNotification(captor.capture());
+        assertThat(captor.getValue().referenceType()).isEqualTo("CLUB_PUBLIC");
+        assertThat(captor.getValue().referenceId()).isEqualTo(clubId);
+        assertThat(captor.getValue().title()).contains("đã giải tán");
+    }
+
+    @Test
+    void ownershipTransferNotifiesTheNewOwner() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        UUID clubId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume(envelope("club.ownership.transferred.v1", eventId, UUID.randomUUID(), clubId));
+
+        ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        verify(notificationService).createNotification(captor.capture());
+        assertThat(captor.getValue().referenceType()).isEqualTo("CLUB");
+        assertThat(captor.getValue().title()).contains("chủ mới");
+    }
 }
