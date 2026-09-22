@@ -44,16 +44,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Notification createNotification(CreateNotificationCommand command) throws ServiceException {
-        NotificationType type;
-        SourceService sourceService;
-        NotificationReferenceType referenceType;
-        try {
-            type = NotificationType.valueOf(command.type());
-            sourceService = SourceService.valueOf(command.sourceService());
-            referenceType = NotificationReferenceType.valueOf(command.referenceType());
-        } catch (IllegalArgumentException e) {
-            throw new ServiceException("Loại thông báo không hợp lệ: " + command.type());
-        }
+        NotificationType type = parseEnum(
+                NotificationType.class, command.type(), "Loại thông báo");
+        SourceService sourceService = parseEnum(
+                SourceService.class, command.sourceService(), "Dịch vụ nguồn");
+        NotificationReferenceType referenceType = parseEnum(
+                NotificationReferenceType.class, command.referenceType(), "Loại tham chiếu");
 
         Notification notification = Notification.builder()
                 .eventId(command.eventId())
@@ -70,6 +66,19 @@ public class NotificationServiceImpl implements NotificationService {
         Notification saved = notificationRepository.save(notification);
         webSocketPublisher.publish(notificationMapper.toNotificationResponseCommand(saved));
         return saved;
+    }
+
+    private <E extends Enum<E>> E parseEnum(Class<E> enumType, String value, String fieldLabel)
+            throws ServiceException {
+        if (value == null || value.isBlank()) {
+            throw new ServiceException(fieldLabel + " không được để trống.");
+        }
+
+        try {
+            return Enum.valueOf(enumType, value);
+        } catch (IllegalArgumentException exception) {
+            throw new ServiceException(fieldLabel + " không hợp lệ: " + value);
+        }
     }
 
     @Override

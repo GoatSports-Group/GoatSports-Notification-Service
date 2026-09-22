@@ -103,7 +103,7 @@ class ClubNotificationConsumerTest {
     }
 
     @Test
-    void disbandedClubNotifiesMembersAndPointsAtThePublicView() throws Exception {
+    void disbandedClubNotifiesMembersAndPointsAtClubLanding() throws Exception {
         UUID eventId = UUID.randomUUID();
         UUID clubId = UUID.randomUUID();
         when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
@@ -112,7 +112,7 @@ class ClubNotificationConsumerTest {
 
         ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
         verify(notificationService).createNotification(captor.capture());
-        assertThat(captor.getValue().referenceType()).isEqualTo("CLUB_PUBLIC");
+        assertThat(captor.getValue().referenceType()).isEqualTo("CLUB_DISBANDED");
         assertThat(captor.getValue().referenceId()).isEqualTo(clubId);
         assertThat(captor.getValue().title()).contains("đã giải tán");
     }

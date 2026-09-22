@@ -121,7 +121,7 @@ public class ClubNotificationConsumer {
                         clubName + " đã giải tán",
                         "Chủ câu lạc bộ đã giải tán " + clubName
                                 + ". Bạn không còn là thành viên của câu lạc bộ này.",
-                        "CLUB", "CLUB", "CLUB_PUBLIC", uuid(payload, "clubId"));
+                        "CLUB", "CLUB", "CLUB_DISBANDED", uuid(payload, "clubId"));
 
                 case "club.ownership.transferred.v1" -> new CreateNotificationCommand(
                         eventId, receiverId,
