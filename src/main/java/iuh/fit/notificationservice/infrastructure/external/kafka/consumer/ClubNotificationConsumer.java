@@ -35,7 +35,12 @@ public class ClubNotificationConsumer {
             "club.invitation.accepted.v1",
             "club.invitation.declined.v1",
             "club.disbanded.v1",
-            "club.ownership.transferred.v1");
+            "club.ownership.transferred.v1",
+            "tournament.team.invited.v1",
+            "tournament.team.answered.v1",
+            "tournament.registration.payment-due.v1",
+            "tournament.registration.confirmed.v1",
+            "tournament.registration.closed.v1");
 
     @KafkaListener(
             topics = "${club.events.topic}",
@@ -73,6 +78,8 @@ public class ClubNotificationConsumer {
             }
 
             String clubName = text(payload, "clubName", "Câu lạc bộ");
+            String tournamentName = text(payload, "tournamentName", "giải đấu");
+            String teamName = text(payload, "teamName", "đội của bạn");
             notificationService.createNotification(switch (eventType) {
                 case "club.activity.created.v1" -> new CreateNotificationCommand(
                         eventId, receiverId,
@@ -128,6 +135,42 @@ public class ClubNotificationConsumer {
                         "Bạn là chủ mới của " + clubName,
                         "Quyền sở hữu " + clubName + " đã được chuyển cho bạn.",
                         "CLUB", "CLUB", "CLUB", uuid(payload, "clubId"));
+
+                // Giai dau: nguoi nhan mo trang giai (/tournaments/{id}) de xac nhan, dong phi hoac xem ly do.
+                case "tournament.team.invited.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        "Lời mời vào đội " + teamName,
+                        "Bạn được mời vào đội " + teamName + " dự " + tournamentName
+                                + ". Vào trang giải để nhận lời hoặc từ chối trước hạn đăng ký.",
+                        "TOURNAMENT", "CLUB", "TOURNAMENT", uuid(payload, "tournamentId"));
+
+                case "tournament.team.answered.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        "true".equals(payload.path("accepted").asText()) ? "Đồng đội đã nhận lời" : "Đồng đội đã từ chối",
+                        ("true".equals(payload.path("accepted").asText())
+                                ? "Một người bạn mời đã vào đội " : "Một người bạn mời đã từ chối vào đội ")
+                                + teamName + " (" + tournamentName + ").",
+                        "TOURNAMENT", "CLUB", "TOURNAMENT", uuid(payload, "tournamentId"));
+
+                case "tournament.registration.payment-due.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        "Đóng lệ phí để giữ suất",
+                        "Đăng ký " + tournamentName + " đã đủ điều kiện. Hãy đóng "
+                                + text(payload, "amount", "lệ phí") + " trước " + text(payload, "deadline", "hạn")
+                                + ", quá hạn suất sẽ được trả lại.",
+                        "TOURNAMENT", "CLUB", "TOURNAMENT", uuid(payload, "tournamentId"));
+
+                case "tournament.registration.confirmed.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        "Đăng ký giải đã được xác nhận",
+                        teamName + " đã chính thức có suất tại " + tournamentName + ".",
+                        "TOURNAMENT", "CLUB", "TOURNAMENT", uuid(payload, "tournamentId"));
+
+                case "tournament.registration.closed.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        "Đăng ký " + tournamentName + " đã đóng",
+                        text(payload, "reason", "Đăng ký của bạn không còn hiệu lực."),
+                        "TOURNAMENT", "CLUB", "TOURNAMENT", uuid(payload, "tournamentId"));
 
                 default -> throw new IllegalStateException("Loại sự kiện chưa hỗ trợ: " + eventType);
             });

@@ -130,4 +130,42 @@ class ClubNotificationConsumerTest {
         assertThat(captor.getValue().referenceType()).isEqualTo("CLUB");
         assertThat(captor.getValue().title()).contains("chủ mới");
     }
+
+    @Test
+    void teamInvitationRoutesInviteeToTournamentPage() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        UUID tournamentId = UUID.randomUUID();
+        UUID receiverId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume("""
+                {"eventId": "%s", "eventType": "tournament.team.invited.v1", "producer": "club-service",
+                 "payload": {"receiverId": "%s", "tournamentId": "%s", "tournamentName": "GOAT Cup",
+                             "teamName": "Đôi Sấm Sét"}}
+                """.formatted(eventId, receiverId, tournamentId));
+
+        ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        verify(notificationService).createNotification(captor.capture());
+        assertThat(captor.getValue().type()).isEqualTo("TOURNAMENT");
+        assertThat(captor.getValue().referenceType()).isEqualTo("TOURNAMENT");
+        assertThat(captor.getValue().referenceId()).isEqualTo(tournamentId);
+        assertThat(captor.getValue().receiverId()).isEqualTo(receiverId);
+        assertThat(captor.getValue().title()).contains("Đôi Sấm Sét");
+    }
+
+    @Test
+    void paymentDueTellsAmountAndDeadline() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume("""
+                {"eventId": "%s", "eventType": "tournament.registration.payment-due.v1", "producer": "club-service",
+                 "payload": {"receiverId": "%s", "tournamentId": "%s", "tournamentName": "GOAT Cup",
+                             "amount": "150.000 đ", "deadline": "20:00 25/09/2026"}}
+                """.formatted(eventId, UUID.randomUUID(), UUID.randomUUID()));
+
+        ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        verify(notificationService).createNotification(captor.capture());
+        assertThat(captor.getValue().content()).contains("150.000 đ").contains("20:00 25/09/2026");
+    }
 }
