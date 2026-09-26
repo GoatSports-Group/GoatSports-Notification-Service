@@ -67,7 +67,8 @@ public class PaymentNotificationConsumer {
                     content.type(),
                     "PAYMENT",
                     content.referenceType(),
-                    uuid(payload, "referenceId")
+                    // Sự kiện hoàn tiền không có referenceId: trỏ về chính khoản hoàn để người chơi mở đúng mục.
+                    eventType.startsWith("refund.") ? uuid(payload, "refundId") : uuid(payload, "referenceId")
             ));
         } catch (Exception exception) {
             log.error("Không xử lý được payment event cho notification: {}", exception.getMessage(), exception);
@@ -94,11 +95,15 @@ public class PaymentNotificationConsumer {
                     "PAYMENT", "PAYMENT");
             case "refund.succeeded.v1" -> new NotificationContent(
                     "Hoàn tiền thành công",
-                    "Khoản hoàn tiền của bạn đã được xử lý.",
+                    "Tiền hoàn đã được chuyển về tài khoản ngân hàng của bạn.",
                     "REFUND", "REFUND");
             case "refund.failed.v1" -> new NotificationContent(
-                    "Hoàn tiền thất bại",
-                    "Khoản hoàn tiền chưa xử lý được. Bộ phận hỗ trợ sẽ liên hệ với bạn.",
+                    "Chuyển tiền hoàn chưa thành công",
+                    "Vào Cài đặt › Ngân hàng & hoàn tiền để kiểm tra tài khoản và thử lại.",
+                    "REFUND", "REFUND");
+            case "refund.awaiting-bank-account.v1" -> new NotificationContent(
+                    "Liên kết ngân hàng để nhận hoàn tiền",
+                    "Bạn có một khoản hoàn tiền đang chờ. Liên kết tài khoản ngân hàng, tiền sẽ được chuyển tự động.",
                     "REFUND", "REFUND");
             case "refund.manual-review.v1" -> new NotificationContent(
                     "Hoàn tiền đang được rà soát",
