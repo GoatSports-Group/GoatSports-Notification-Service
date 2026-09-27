@@ -73,6 +73,19 @@ class NotificationServiceImplTest {
                 .hasMessage("Loại tham chiếu không hợp lệ: UNKNOWN_REFERENCE");
     }
 
+    @Test
+    void repeatedEventIdCreatesNoSecondNotification() throws ServiceException {
+        UUID eventId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(true);
+
+        assertThat(service().createNotification(new CreateNotificationCommand(
+                eventId, UUID.randomUUID(), "Hết giờ giữ sân — đang hoàn tiền", "Nội dung",
+                "BOOKING", "VENUE", "BOOKING", UUID.randomUUID()))).isNull();
+
+        verify(notificationRepository, org.mockito.Mockito.never()).save(any());
+        org.mockito.Mockito.verifyNoInteractions(webSocketPublisher);
+    }
+
     private NotificationServiceImpl service() {
         return new NotificationServiceImpl(notificationRepository, webSocketPublisher, notificationMapper);
     }

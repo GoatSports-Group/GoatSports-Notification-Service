@@ -37,7 +37,7 @@ public class NotificationInternalController {
             @Valid @RequestBody CreateNotificationRequest request
     ) throws ServiceException {
         CreateNotificationCommand command = new CreateNotificationCommand(
-                null,
+                request.eventId(),
                 request.receiverId(),
                 request.title(),
                 request.content(),
@@ -46,9 +46,9 @@ public class NotificationInternalController {
                 request.referenceType(),
                 request.referenceId()
         );
-        NotificationResponseCommand result = notificationMapper.toNotificationResponseCommand(
-                notificationService.createNotification(command)
-        );
+        var created = notificationService.createNotification(command);
+        if (created == null) return ResponseEntity.ok().build(); // eventId đã xử lý trước đó
+        NotificationResponseCommand result = notificationMapper.toNotificationResponseCommand(created);
         return ResponseEntity.status(HttpStatus.CREATED).body(notificationConverter.toResponse(result));
     }
 

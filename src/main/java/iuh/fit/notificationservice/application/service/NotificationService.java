@@ -15,6 +15,7 @@ import iuh.fit.notificationservice.domain.entity.Notification;
 public interface NotificationService {
     long countUnreadNotification(CountUnreadNotificationCommand command);
 
+    /** Trả về {@code null} nếu eventId của lệnh đã sinh thông báo trước đó (gọi lặp / Kafka xử lý lại). */
     Notification createNotification(CreateNotificationCommand command) throws ServiceException;
 
     void notifyUser(NotificationResponseCommand notification);

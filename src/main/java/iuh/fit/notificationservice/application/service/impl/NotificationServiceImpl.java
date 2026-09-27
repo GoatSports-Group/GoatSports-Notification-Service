@@ -44,6 +44,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Notification createNotification(CreateNotificationCommand command) throws ServiceException {
+        if (notificationRepository.existsByEventId(command.eventId())) return null;
         NotificationType type = parseEnum(
                 NotificationType.class, command.type(), "Loại thông báo");
         SourceService sourceService = parseEnum(
