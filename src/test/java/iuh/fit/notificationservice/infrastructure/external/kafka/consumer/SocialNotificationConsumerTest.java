@@ -90,4 +90,24 @@ class SocialNotificationConsumerTest {
 
         verify(notificationService, never()).createNotification(any());
     }
+
+    @Test
+    void mentionAndFriendRequestBecomeTheirOwnNotifications() throws Exception {
+        UUID actor = UUID.randomUUID();
+        when(authClient.getUserById(actor)).thenReturn(objectMapper.readTree("{\"data\":{\"fullName\":\"Lê Thu Hà\"}}"));
+
+        consumer().consume(envelope("social.post.mentioned.v1", UUID.randomUUID(), actor, UUID.randomUUID(), UUID.randomUUID()));
+        String friendRequest = """
+                {"eventId":"%s","eventType":"social.friend.requested.v1","actorId":"%s",
+                 "payload":{"receiverId":"%s","friendshipId":"%s"}}
+                """.formatted(UUID.randomUUID(), actor, UUID.randomUUID(), UUID.randomUUID());
+        consumer().consume(friendRequest);
+
+        ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        verify(notificationService, org.mockito.Mockito.times(2)).createNotification(captor.capture());
+        assertThat(captor.getAllValues().get(0).title()).isEqualTo("Lê Thu Hà đã nhắc đến bạn trong một bài viết");
+        assertThat(captor.getAllValues().get(0).referenceType()).isEqualTo("POST");
+        assertThat(captor.getAllValues().get(1).type()).isEqualTo("FRIENDSHIP");
+        assertThat(captor.getAllValues().get(1).referenceType()).isEqualTo("FRIENDSHIP");
+    }
 }

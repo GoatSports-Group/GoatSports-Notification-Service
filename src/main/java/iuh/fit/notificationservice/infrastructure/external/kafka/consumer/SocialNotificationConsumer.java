@@ -76,6 +76,15 @@ public class SocialNotificationConsumer {
             case "social.post.shared.v1" -> post(eventId, receiverId, postId,
                     actorName(actorId) + " đã chia sẻ bài viết của bạn",
                     quoteOr(snippet, "Bài viết của bạn đang được lan tỏa trong cộng đồng."));
+            case "social.post.mentioned.v1" -> post(eventId, receiverId, postId,
+                    actorName(actorId) + " đã nhắc đến bạn trong một bài viết",
+                    quoteOr(snippet, "Vào xem bài viết nhé."));
+            case "social.friend.requested.v1" -> friendship(eventId, receiverId, payload,
+                    actorName(actorId) + " muốn kết bạn với bạn",
+                    "Vào Cộng đồng › Bạn bè để chấp nhận hoặc từ chối.");
+            case "social.friend.accepted.v1" -> friendship(eventId, receiverId, payload,
+                    actorName(actorId) + " đã chấp nhận lời mời kết bạn",
+                    "Giờ hai bạn có thể xem bài chỉ dành cho bạn bè và nhắn tin cho nhau.");
             case "social.user.followed.v1" -> {
                 String name = actorName(actorId);
                 yield new CreateNotificationCommand(eventId, receiverId,
@@ -85,6 +94,12 @@ public class SocialNotificationConsumer {
             }
             default -> null;
         };
+    }
+
+    private CreateNotificationCommand friendship(UUID eventId, UUID receiverId, JsonNode payload, String title,
+                                                 String content) {
+        return new CreateNotificationCommand(eventId, receiverId, title, content,
+                "FRIENDSHIP", "SOCIAL", "FRIENDSHIP", uuid(payload, "friendshipId"));
     }
 
     private CreateNotificationCommand post(UUID eventId, UUID receiverId, UUID postId, String title, String content) {
