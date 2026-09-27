@@ -110,4 +110,17 @@ class SocialNotificationConsumerTest {
         assertThat(captor.getAllValues().get(1).type()).isEqualTo("FRIENDSHIP");
         assertThat(captor.getAllValues().get(1).referenceType()).isEqualTo("FRIENDSHIP");
     }
+
+    @Test
+    void commentMentionLinksThePost() throws Exception {
+        UUID actor = UUID.randomUUID();
+        UUID postId = UUID.randomUUID();
+        when(authClient.getUserById(actor)).thenReturn(objectMapper.readTree("{\"data\":{\"fullName\":\"Phạm Khoa\"}}"));
+
+        consumer().consume(envelope("social.comment.mentioned.v1", UUID.randomUUID(), actor, UUID.randomUUID(), postId));
+
+        CreateNotificationCommand command = captured();
+        assertThat(command.title()).isEqualTo("Phạm Khoa đã nhắc đến bạn trong một bình luận");
+        assertThat(command.referenceId()).isEqualTo(postId);
+    }
 }

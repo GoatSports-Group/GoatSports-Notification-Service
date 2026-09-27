@@ -79,6 +79,9 @@ public class SocialNotificationConsumer {
             case "social.post.mentioned.v1" -> post(eventId, receiverId, postId,
                     actorName(actorId) + " đã nhắc đến bạn trong một bài viết",
                     quoteOr(snippet, "Vào xem bài viết nhé."));
+            case "social.comment.mentioned.v1" -> post(eventId, receiverId, postId,
+                    actorName(actorId) + " đã nhắc đến bạn trong một bình luận",
+                    quoteOr(snippet, "Vào xem bình luận nhé."));
             case "social.friend.requested.v1" -> friendship(eventId, receiverId, payload,
                     actorName(actorId) + " muốn kết bạn với bạn",
                     "Vào Cộng đồng › Bạn bè để chấp nhận hoặc từ chối.");
