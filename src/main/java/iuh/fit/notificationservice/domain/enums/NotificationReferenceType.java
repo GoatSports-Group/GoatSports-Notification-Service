@@ -20,5 +20,7 @@ public enum NotificationReferenceType {
     TOURNAMENT,
     TOURNAMENT_REGISTRATION,
     TOURNAMENT_FIXTURE,
+    POST,
+    COMMUNITY_USER,
     SYSTEM
 }

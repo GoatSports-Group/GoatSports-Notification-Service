@@ -13,5 +13,6 @@ public enum NotificationType {
     CONTENT_MODERATION,
     CLUB,
     TOURNAMENT,
+    COMMUNITY,
     SYSTEM
 }
