@@ -168,4 +168,24 @@ class ClubNotificationConsumerTest {
         verify(notificationService).createNotification(captor.capture());
         assertThat(captor.getValue().content()).contains("150.000 đ").contains("20:00 25/09/2026");
     }
+
+    @Test
+    void ratedMatchTellsHowManyEloPointsWereWonOrLost() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        UUID tournamentId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume("""
+                {"eventId": "%s", "eventType": "tournament.match.rated.v1", "producer": "club-service",
+                 "payload": {"receiverId": "%s", "tournamentId": "%s", "tournamentName": "GOAT Cup",
+                             "matchTitle": "Bán kết · Trận 1 · GOAT Cup", "outcome": "LOSS", "score": "15–21",
+                             "opponentName": "Nguyễn Minh", "oldElo": "1200", "newElo": "1182", "delta": "-18"}}
+                """.formatted(eventId, UUID.randomUUID(), tournamentId));
+
+        ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        verify(notificationService).createNotification(captor.capture());
+        assertThat(captor.getValue().title()).isEqualTo("Thua 15–21 · −18 ELO");
+        assertThat(captor.getValue().content()).contains("Bán kết").contains("Nguyễn Minh").contains("1200 → 1182");
+        assertThat(captor.getValue().referenceId()).isEqualTo(tournamentId);
+    }
 }

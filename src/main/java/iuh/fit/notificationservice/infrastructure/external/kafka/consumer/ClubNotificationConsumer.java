@@ -40,7 +40,8 @@ public class ClubNotificationConsumer {
             "tournament.team.answered.v1",
             "tournament.registration.payment-due.v1",
             "tournament.registration.confirmed.v1",
-            "tournament.registration.closed.v1");
+            "tournament.registration.closed.v1",
+            "tournament.match.rated.v1");
 
     @KafkaListener(
             topics = "${club.events.topic}",
@@ -172,11 +173,32 @@ public class ClubNotificationConsumer {
                         text(payload, "reason", "Đăng ký của bạn không còn hiệu lực."),
                         "TOURNAMENT", "CLUB", "TOURNAMENT", uuid(payload, "tournamentId"));
 
+                // Mot tran giai co ket qua: moi nguoi thi dau biet minh duoc cong/tru bao nhieu ELO.
+                case "tournament.match.rated.v1" -> new CreateNotificationCommand(
+                        eventId, receiverId,
+                        matchRatedTitle(payload),
+                        text(payload, "matchTitle", tournamentName) + " · gặp " + text(payload, "opponentName", "đối thủ")
+                                + ". ELO " + text(payload, "oldElo", "?") + " → " + text(payload, "newElo", "?") + ".",
+                        "TOURNAMENT", "CLUB", "TOURNAMENT", uuid(payload, "tournamentId"));
+
                 default -> throw new IllegalStateException("Loại sự kiện chưa hỗ trợ: " + eventType);
             });
         } catch (Exception exception) {
             log.error("Không xử lý được club event cho notification: {}", exception.getMessage(), exception);
         }
+    }
+
+    /** "Thắng 21–15 · +24 ELO" / "Thua 15–21 · −18 ELO" / "Hòa 18–18 · +0 ELO". */
+    static String matchRatedTitle(JsonNode payload) {
+        String outcome = switch (payload.path("outcome").asText("")) {
+            case "WIN" -> "Thắng";
+            case "LOSS" -> "Thua";
+            default -> "Hòa";
+        };
+        int delta = payload.path("delta").asInt(0);
+        String change = delta < 0 ? "−" + Math.abs(delta) : "+" + delta;
+        String score = payload.path("score").asText("");
+        return outcome + (score.isBlank() ? "" : " " + score) + " · " + change + " ELO";
     }
 
     /** Người xin vào có thể chưa có tên hiển thị; khi đó client tự tra theo requesterId. */
