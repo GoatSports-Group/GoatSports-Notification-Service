@@ -79,6 +79,11 @@ public class SocialNotificationConsumer {
             case "social.post.mentioned.v1" -> post(eventId, receiverId, postId,
                     actorName(actorId) + " đã nhắc đến bạn trong một bài viết",
                     quoteOr(snippet, "Vào xem bài viết nhé."));
+            case "social.post.tagged.v1" -> post(eventId, receiverId, postId,
+                    actorName(actorId) + ("TOURNAMENT".equals(payload.path("kind").asText())
+                            ? " đã khoe thành tích giải đấu của CLB và gắn thẻ bạn"
+                            : " đã khoe trận đấu với bạn lên Cộng đồng"),
+                    quoteOr(snippet, "Vào xem bài viết nhé."));
             case "social.comment.mentioned.v1" -> post(eventId, receiverId, postId,
                     actorName(actorId) + " đã nhắc đến bạn trong một bình luận",
                     quoteOr(snippet, "Vào xem bình luận nhé."));

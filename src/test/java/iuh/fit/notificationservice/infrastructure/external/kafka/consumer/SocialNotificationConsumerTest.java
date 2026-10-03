@@ -81,6 +81,25 @@ class SocialNotificationConsumerTest {
     }
 
     @Test
+    void taggedInATournamentHighlightSaysWhatWasShownOff() throws Exception {
+        UUID actor = UUID.randomUUID();
+        UUID postId = UUID.randomUUID();
+        when(authClient.getUserById(actor)).thenReturn(objectMapper.readTree("{\"data\":{\"fullName\":\"Minh Đạt\"}}"));
+        String tagged = """
+                {"eventId":"%s","eventType":"social.post.tagged.v1","actorId":"%s",
+                 "payload":{"receiverId":"%s","postId":"%s","snippet":"Vô địch Giải Phong Trào","kind":"TOURNAMENT"}}
+                """.formatted(UUID.randomUUID(), actor, UUID.randomUUID(), postId);
+
+        consumer().consume(tagged);
+
+        CreateNotificationCommand command = captured();
+        assertThat(command.title()).isEqualTo("Minh Đạt đã khoe thành tích giải đấu của CLB và gắn thẻ bạn");
+        assertThat(command.content()).contains("Vô địch Giải Phong Trào");
+        assertThat(command.referenceType()).isEqualTo("POST");
+        assertThat(command.referenceId()).isEqualTo(postId);
+    }
+
+    @Test
     void duplicateEventIsIgnored() throws Exception {
         UUID eventId = UUID.randomUUID();
         when(notificationRepository.existsByEventId(eventId)).thenReturn(true);
