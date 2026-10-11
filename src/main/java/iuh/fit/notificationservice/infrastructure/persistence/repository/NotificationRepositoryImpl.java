@@ -21,8 +21,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -37,6 +39,20 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     @Override
     public boolean existsByEventId(UUID eventId) {
         return eventId != null && jpaRepository.existsByEventId(eventId);
+    }
+
+    @Override
+    @Transactional
+    public List<Notification> saveAllNew(List<Notification> notifications) {
+        if (notifications.isEmpty()) return List.of();
+        Set<UUID> existing = new HashSet<>(jpaRepository.findExistingEventIds(
+                notifications.stream().map(Notification::getEventId).toList()));
+        List<NotificationEntity> fresh = notifications.stream()
+                .filter(notification -> !existing.contains(notification.getEventId()))
+                .map(notificationEntityMapper::createEntity)
+                .toList();
+        // Insert theo lô (hibernate.jdbc.batch_size), không select từng bản: id UUID sinh phía ứng dụng.
+        return jpaRepository.saveAll(fresh).stream().map(notificationEntityMapper::toDomain).toList();
     }
 
     @Override

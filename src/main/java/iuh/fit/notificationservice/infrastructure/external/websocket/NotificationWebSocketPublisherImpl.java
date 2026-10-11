@@ -9,6 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.time.Instant;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -38,14 +41,28 @@ public class NotificationWebSocketPublisherImpl implements NotificationWebSocket
         }
     }
 
+    // Mã admin gần như không đổi: trước đây MỖI thông báo gọi HTTP sang auth-service một lần (gửi cho
+    // 1.000 người = 1.000 request). Giữ 5 phút; lỗi thì không cache để lần sau hỏi lại.
+    private static final Duration ADMIN_ID_TTL = Duration.ofMinutes(5);
+    private volatile String cachedAdminId;
+    private volatile Instant adminIdExpiresAt = Instant.EPOCH;
+
     private boolean isAdminReceiver(String receiverId) {
         try {
-            String adminId = authClient.getAdmin();
+            String adminId = adminId();
             return adminId != null && receiverId.equalsIgnoreCase(adminId);
         } catch (Exception e) {
             log.warn("Could not resolve the admin account; using the user notification topic: {}", e.getMessage());
             return false;
         }
+    }
+
+    private String adminId() {
+        if (Instant.now().isAfter(adminIdExpiresAt)) {
+            cachedAdminId = authClient.getAdmin();
+            adminIdExpiresAt = Instant.now().plus(ADMIN_ID_TTL);
+        }
+        return cachedAdminId;
     }
 
     @Override

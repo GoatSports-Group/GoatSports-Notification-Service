@@ -6,5 +6,6 @@ public enum SourceService {
     PAYMENT,
     SOCIAL,
     CLUB,
-    AI
+    AI,
+    ADMIN
 }

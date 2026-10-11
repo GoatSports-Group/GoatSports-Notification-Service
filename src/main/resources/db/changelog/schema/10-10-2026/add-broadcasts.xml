@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <!--
+      Thông báo hệ thống do admin gửi. Mỗi người nhận vẫn có một dòng riêng trong notifications
+      (event_id suy ra từ broadcast_id + receiver_id nên gửi lại một lô không sinh bản trùng).
+      last_recipient_id / delivered_count: mốc để gửi tiếp sau khi service khởi động lại.
+      claimed_at: quyền gửi có thời hạn, giành bằng UPDATE có điều kiện (an toàn khi nhiều instance).
+    -->
+    <changeSet id="20261010-broadcasts" author="claude">
+        <createTable tableName="broadcasts">
+            <column name="broadcast_id" type="UUID">
+                <constraints primaryKey="true" primaryKeyName="pk_broadcasts"/>
+            </column>
+            <column name="title" type="VARCHAR(150)"><constraints nullable="false"/></column>
+            <column name="content" type="VARCHAR(2000)"><constraints nullable="false"/></column>
+            <column name="audience" type="VARCHAR(32)"><constraints nullable="false"/></column>
+            <column name="status" type="VARCHAR(16)"><constraints nullable="false"/></column>
+            <column name="sent_by" type="UUID"><constraints nullable="false"/></column>
+            <column name="idempotency_key" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uc_broadcasts_idempotency_key"/>
+            </column>
+            <column name="delivered_count" type="INTEGER" defaultValueNumeric="0"><constraints nullable="false"/></column>
+            <column name="last_recipient_id" type="UUID"/>
+            <column name="attempt_count" type="INTEGER" defaultValueNumeric="0"><constraints nullable="false"/></column>
+            <column name="claimed_at" type="TIMESTAMP"/>
+            <column name="completed_at" type="TIMESTAMP"/>
+            <column name="failure_reason" type="VARCHAR(500)"/>
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+        </createTable>
+        <createIndex tableName="broadcasts" indexName="idx_broadcasts_created_at">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+    <!--
+      Danh sách thông báo và đếm chưa đọc đều lọc theo receiver_id nhưng bảng chưa có index nào ngoài khóa
+      chính; mỗi thông báo hệ thống thêm một dòng cho từng người dùng nên bảng sẽ lớn nhanh.
+    -->
+    <changeSet id="20261010-notifications-receiver-index" author="claude">
+        <createIndex tableName="notifications" indexName="idx_notifications_receiver_created">
+            <column name="receiver_id"/>
+            <column name="created_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

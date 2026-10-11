@@ -5,7 +5,9 @@ import iuh.fit.notificationservice.infrastructure.config.AuthClientConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Set;
 import java.util.UUID;
 
 @FeignClient(
@@ -15,10 +17,17 @@ import java.util.UUID;
         configuration = AuthClientConfig.class
 )
 public interface AuthClient {
-    /** BaseResponse cua auth-service; ten hien thi nam o {@code data.fullName}. */
     @GetMapping("/{userId}")
     JsonNode getUserById(@PathVariable UUID userId);
 
     @GetMapping("/admin")
     String getAdmin();
+
+    @GetMapping("/recipients/ids")
+    JsonNode getRecipientIds(@RequestParam("roles") Set<String> roles,
+                             @RequestParam(value = "after", required = false) UUID after,
+                             @RequestParam("limit") int limit);
+
+    @GetMapping("/recipients/count")
+    JsonNode countRecipients(@RequestParam("roles") Set<String> roles);
 }

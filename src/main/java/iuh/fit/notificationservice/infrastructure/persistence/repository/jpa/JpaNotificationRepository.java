@@ -10,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -32,4 +34,7 @@ public interface JpaNotificationRepository extends JpaRepository<NotificationEnt
     );
 
     boolean existsByEventId(UUID eventId);
+
+    @Query("select n.eventId from NotificationEntity n where n.eventId in :eventIds")
+    List<UUID> findExistingEventIds(@Param("eventIds") Collection<UUID> eventIds);
 }
