@@ -53,8 +53,8 @@ class SocialNotificationConsumerTest {
     void commentNotificationNamesTheActorAndLinksThePost() throws Exception {
         UUID actor = UUID.randomUUID();
         UUID postId = UUID.randomUUID();
-        when(authClient.getUserById(actor)).thenReturn(objectMapper.readTree(
-                "{\"data\":{\"fullName\":\"Trần Quốc Bảo\",\"username\":\"bao.tq\"}}"));
+        when(authClient.getUserById(actor)).thenReturn(
+                new AuthClient.Envelope<>(new AuthClient.UserView("Trần Quốc Bảo", "bao.tq")));
 
         consumer().consume(envelope("social.post.commented.v1", UUID.randomUUID(), actor, UUID.randomUUID(), postId));
 
@@ -84,7 +84,7 @@ class SocialNotificationConsumerTest {
     void taggedInATournamentHighlightSaysWhatWasShownOff() throws Exception {
         UUID actor = UUID.randomUUID();
         UUID postId = UUID.randomUUID();
-        when(authClient.getUserById(actor)).thenReturn(objectMapper.readTree("{\"data\":{\"fullName\":\"Minh Đạt\"}}"));
+        when(authClient.getUserById(actor)).thenReturn(new AuthClient.Envelope<>(new AuthClient.UserView("Minh Đạt", null)));
         String tagged = """
                 {"eventId":"%s","eventType":"social.post.tagged.v1","actorId":"%s",
                  "payload":{"receiverId":"%s","postId":"%s","snippet":"Vô địch Giải Phong Trào","kind":"TOURNAMENT"}}
@@ -113,7 +113,7 @@ class SocialNotificationConsumerTest {
     @Test
     void mentionAndFriendRequestBecomeTheirOwnNotifications() throws Exception {
         UUID actor = UUID.randomUUID();
-        when(authClient.getUserById(actor)).thenReturn(objectMapper.readTree("{\"data\":{\"fullName\":\"Lê Thu Hà\"}}"));
+        when(authClient.getUserById(actor)).thenReturn(new AuthClient.Envelope<>(new AuthClient.UserView("Lê Thu Hà", null)));
 
         consumer().consume(envelope("social.post.mentioned.v1", UUID.randomUUID(), actor, UUID.randomUUID(), UUID.randomUUID()));
         String friendRequest = """
@@ -134,7 +134,7 @@ class SocialNotificationConsumerTest {
     void commentMentionLinksThePost() throws Exception {
         UUID actor = UUID.randomUUID();
         UUID postId = UUID.randomUUID();
-        when(authClient.getUserById(actor)).thenReturn(objectMapper.readTree("{\"data\":{\"fullName\":\"Phạm Khoa\"}}"));
+        when(authClient.getUserById(actor)).thenReturn(new AuthClient.Envelope<>(new AuthClient.UserView("Phạm Khoa", null)));
 
         consumer().consume(envelope("social.comment.mentioned.v1", UUID.randomUUID(), actor, UUID.randomUUID(), postId));
 

@@ -118,11 +118,10 @@ public class SocialNotificationConsumer {
     /** Thong bao van phai toi khi auth-service cham: loi tra cuu chi lam mat ten, khong lam mat thong bao. */
     private String actorName(UUID actorId) {
         try {
-            JsonNode user = authClient.getUserById(actorId).path("data");
-            String fullName = user.path("fullName").asText("");
-            if (!fullName.isBlank()) return fullName;
-            String username = user.path("username").asText("");
-            return username.isBlank() ? FALLBACK_NAME : username;
+            AuthClient.UserView user = authClient.getUserById(actorId).data();
+            if (user == null) return FALLBACK_NAME;
+            if (user.fullName() != null && !user.fullName().isBlank()) return user.fullName();
+            return user.username() == null || user.username().isBlank() ? FALLBACK_NAME : user.username();
         } catch (Exception exception) {
             log.warn("Không tra được tên người dùng {}: {}", actorId, exception.getMessage());
             return FALLBACK_NAME;

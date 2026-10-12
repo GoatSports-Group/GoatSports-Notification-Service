@@ -1,12 +1,12 @@
 package iuh.fit.notificationservice.infrastructure.external.client;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import iuh.fit.notificationservice.infrastructure.config.AuthClientConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,17 +17,24 @@ import java.util.UUID;
         configuration = AuthClientConfig.class
 )
 public interface AuthClient {
+    /**
+     * Vỏ BaseResponse của auth-service. Dùng record có kiểu thay vì JsonNode: Spring Boot 4 giải mã bằng Jackson 3,
+     */
+    record Envelope<T>(T data) {}
+
+    record UserView(String fullName, String username) {}
+
     @GetMapping("/{userId}")
-    JsonNode getUserById(@PathVariable UUID userId);
+    Envelope<UserView> getUserById(@PathVariable UUID userId);
 
     @GetMapping("/admin")
     String getAdmin();
 
     @GetMapping("/recipients/ids")
-    JsonNode getRecipientIds(@RequestParam("roles") Set<String> roles,
-                             @RequestParam(value = "after", required = false) UUID after,
-                             @RequestParam("limit") int limit);
+    Envelope<List<UUID>> getRecipientIds(@RequestParam("roles") Set<String> roles,
+                                         @RequestParam(value = "after", required = false) UUID after,
+                                         @RequestParam("limit") int limit);
 
     @GetMapping("/recipients/count")
-    JsonNode countRecipients(@RequestParam("roles") Set<String> roles);
+    Envelope<Long> countRecipients(@RequestParam("roles") Set<String> roles);
 }
