@@ -14,5 +14,6 @@ public enum NotificationType {
     CLUB,
     TOURNAMENT,
     COMMUNITY,
+    REPORT_EXPORT,
     SYSTEM
 }
