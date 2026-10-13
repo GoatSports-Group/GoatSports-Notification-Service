@@ -11,6 +11,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -26,6 +28,9 @@ import java.util.UUID;
         havingValue = "true"
 )
 public class PaymentNotificationConsumer {
+    static final String REFUND_REMINDER = "reminder.refund-pending.v1";
+    private static final Locale VI = Locale.forLanguageTag("vi-VN");
+
     private final ObjectMapper objectMapper;
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
@@ -49,10 +54,12 @@ public class PaymentNotificationConsumer {
                 return;
             }
 
-            NotificationContent content = contentFor(eventType);
+            JsonNode payload = envelope.path("payload");
+            NotificationContent content = REFUND_REMINDER.equals(eventType)
+                    ? reminderContent(payload)
+                    : contentFor(eventType);
             if (content == null) return;
 
-            JsonNode payload = envelope.path("payload");
             UUID receiverId = uuid(payload, "payerId");
             if (receiverId == null) {
                 log.warn("Payment event {} không có payerId, bỏ qua", eventType);
@@ -68,7 +75,8 @@ public class PaymentNotificationConsumer {
                     "PAYMENT",
                     content.referenceType(),
                     // Sự kiện hoàn tiền không có referenceId: trỏ về chính khoản hoàn để người chơi mở đúng mục.
-                    eventType.startsWith("refund.") ? uuid(payload, "refundId") : uuid(payload, "referenceId")
+                    eventType.startsWith("refund.") || REFUND_REMINDER.equals(eventType)
+                            ? uuid(payload, "refundId") : uuid(payload, "referenceId")
             ));
         } catch (Exception exception) {
             log.error("Không xử lý được payment event cho notification: {}", exception.getMessage(), exception);
@@ -108,6 +116,25 @@ public class PaymentNotificationConsumer {
             case "refund.manual-review.v1" -> new NotificationContent(
                     "Hoàn tiền đang được rà soát",
                     "Yêu cầu hoàn tiền của bạn đang được kiểm tra thủ công.",
+                    "REFUND", "REFUND");
+            default -> null;
+        };
+    }
+
+    private NotificationContent reminderContent(JsonNode payload) {
+        String amount = NumberFormat.getIntegerInstance(VI).format(payload.path("amount").asDouble()) + " đ";
+        return switch (payload.path("status").asText()) {
+            case "AWAITING_CLAIM" -> new NotificationContent(
+                    "Bạn còn khoản hoàn tiền chưa nhận",
+                    "Khoản hoàn " + amount + " đang chờ bạn. Vào Cài đặt › Ngân hàng & hoàn tiền và bấm Nhận hoàn tiền.",
+                    "REFUND", "REFUND");
+            case "AWAITING_BANK_ACCOUNT" -> new NotificationContent(
+                    "Liên kết ngân hàng để nhận " + amount,
+                    "Khoản hoàn " + amount + " vẫn đang chờ. Liên kết tài khoản ngân hàng, tiền sẽ được chuyển tự động.",
+                    "REFUND", "REFUND");
+            case "FAILED" -> new NotificationContent(
+                    "Khoản hoàn " + amount + " chưa chuyển được",
+                    "Kiểm tra tài khoản ngân hàng trong Cài đặt › Ngân hàng & hoàn tiền rồi bấm Thử lại.",
                     "REFUND", "REFUND");
             default -> null;
         };

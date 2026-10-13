@@ -76,6 +76,43 @@ class PaymentNotificationConsumerTest {
     }
 
     @Test
+    void refundReminderTellsThePlayerTheAmountAndOpensTheRefund() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        UUID payerId = UUID.randomUUID();
+        UUID refundId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume(reminder(eventId, payerId, refundId, "AWAITING_BANK_ACCOUNT"));
+
+        ArgumentCaptor<CreateNotificationCommand> captor =
+                ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        verify(notificationService).createNotification(captor.capture());
+        assertThat(captor.getValue().receiverId()).isEqualTo(payerId);
+        assertThat(captor.getValue().title()).isEqualTo("Liên kết ngân hàng để nhận 60.000 đ");
+        assertThat(captor.getValue().referenceId()).isEqualTo(refundId);
+    }
+
+    @Test
+    void cashRefundReminderIsLeftToVenueServiceToTellTheOwner() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume(reminder(eventId, UUID.randomUUID(), UUID.randomUUID(), "MANUAL_REVIEW"));
+
+        verify(notificationService, never()).createNotification(any());
+    }
+
+    private String reminder(UUID eventId, UUID payerId, UUID refundId, String status) {
+        return """
+                {
+                  "eventId": "%s",
+                  "eventType": "reminder.refund-pending.v1",
+                  "payload": { "payerId": "%s", "refundId": "%s", "amount": 60000.0, "status": "%s" }
+                }
+                """.formatted(eventId, payerId, refundId, status);
+    }
+
+    @Test
     void duplicateEventIdIsSkipped() throws Exception {
         UUID eventId = UUID.randomUUID();
         when(notificationRepository.existsByEventId(eventId)).thenReturn(true);
