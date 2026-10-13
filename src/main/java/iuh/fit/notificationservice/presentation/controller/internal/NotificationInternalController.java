@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/internal/notifications")
 @RequiredArgsConstructor
@@ -50,6 +52,30 @@ public class NotificationInternalController {
         if (created == null) return ResponseEntity.ok().build(); // eventId đã xử lý trước đó
         NotificationResponseCommand result = notificationMapper.toNotificationResponseCommand(created);
         return ResponseEntity.status(HttpStatus.CREATED).body(notificationConverter.toResponse(result));
+    }
+
+    /**
+     * Cảnh báo vận hành gửi admin nền tảng (audit-service: dịch vụ ngừng, đăng nhập thất bại liên tục). Người gửi không
+     * cần biết mã admin; cùng eventId chỉ tạo một thông báo.
+     */
+    // ponytail: gửi admin chính (authClient.getAdmin()); nhiều admin thì cần API "mọi admin" ở auth-service.
+    @PostMapping("/admin")
+    public ResponseEntity<Void> notifyAdmin(@Valid @RequestBody AdminAlertRequest request) throws ServiceException {
+        notificationService.createNotification(new CreateNotificationCommand(
+                request.eventId(), currentUserProvider.getAdminId(), request.title(), request.content(),
+                "SYSTEM", request.sourceService(), request.referenceType(), request.referenceId()));
+        return ResponseEntity.ok().build();
+    }
+
+    public record AdminAlertRequest(
+            UUID eventId,
+            @jakarta.validation.constraints.NotBlank String title,
+            @jakarta.validation.constraints.NotBlank String content,
+            @jakarta.validation.constraints.NotBlank String sourceService,
+            /** SYSTEM_ALERT (sự cố dịch vụ) hoặc SECURITY_ALERT (đăng nhập thất bại liên tục). */
+            @jakarta.validation.constraints.Pattern(regexp = "SYSTEM_ALERT|SECURITY_ALERT") String referenceType,
+            @jakarta.validation.constraints.NotNull UUID referenceId
+    ) {
     }
 
     @PostMapping("/owner-applications")

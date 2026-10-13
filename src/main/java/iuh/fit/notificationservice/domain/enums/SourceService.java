@@ -8,5 +8,6 @@ public enum SourceService {
     CLUB,
     AI,
     ADMIN,
-    REPORT
+    REPORT,
+    AUDIT
 }

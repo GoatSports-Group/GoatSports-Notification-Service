@@ -23,6 +23,8 @@ public enum NotificationReferenceType {
     POST,
     COMMUNITY_USER,
     REPORT_EXPORT,
+    SYSTEM_ALERT,
+    SECURITY_ALERT,
     FINANCE_REPORT_EXPORT,
     SYSTEM
 }
