@@ -57,7 +57,7 @@ public class PaymentNotificationConsumer {
             JsonNode payload = envelope.path("payload");
             NotificationContent content = REFUND_REMINDER.equals(eventType)
                     ? reminderContent(payload)
-                    : contentFor(eventType);
+                    : contentFor(eventType, payload);
             if (content == null) return;
 
             UUID receiverId = uuid(payload, "payerId");
@@ -83,7 +83,7 @@ public class PaymentNotificationConsumer {
         }
     }
 
-    private NotificationContent contentFor(String eventType) {
+    private NotificationContent contentFor(String eventType, JsonNode payload) {
         return switch (eventType) {
             case "payment.succeeded.v1" -> new NotificationContent(
                     "Thanh toán thành công",
@@ -107,11 +107,13 @@ public class PaymentNotificationConsumer {
                     "REFUND", "REFUND");
             case "refund.failed.v1" -> new NotificationContent(
                     "Chuyển tiền hoàn chưa thành công",
-                    "Vào Cài đặt › Ngân hàng & hoàn tiền để kiểm tra tài khoản và thử lại.",
+                    withAction(failureReason(payload, "Chuyển tiền hoàn về ngân hàng chưa thành công."),
+                            "Vào Cài đặt › Ngân hàng & hoàn tiền để kiểm tra rồi bấm Thử lại."),
                     "REFUND", "REFUND");
             case "refund.awaiting-bank-account.v1" -> new NotificationContent(
-                    "Liên kết ngân hàng để nhận hoàn tiền",
-                    "Bạn có một khoản hoàn tiền đang chờ. Liên kết tài khoản ngân hàng, tiền sẽ được chuyển tự động.",
+                    "Chuyển tiền hoàn chưa thành công",
+                    withAction(failureReason(payload, "Tài khoản ngân hàng nhận tiền không dùng được."),
+                            "Vào Cài đặt › Ngân hàng & hoàn tiền để sửa hoặc chọn tài khoản khác, tiền sẽ được chuyển lại."),
                     "REFUND", "REFUND");
             case "refund.manual-review.v1" -> new NotificationContent(
                     "Hoàn tiền đang được rà soát",
@@ -119,6 +121,16 @@ public class PaymentNotificationConsumer {
                     "REFUND", "REFUND");
             default -> null;
         };
+    }
+
+    private static String failureReason(JsonNode payload, String fallback) {
+        JsonNode reason = payload.path("failureReason");
+        return reason.isMissingNode() || reason.isNull() || reason.asText().isBlank() ? fallback : reason.asText().trim();
+    }
+
+    /** Lý do từ payment-service có thể đã kèm hướng dẫn ("chọn tài khoản khác"); chỉ thêm chỉ dẫn mở trang nếu chưa có. */
+    private static String withAction(String reason, String action) {
+        return reason.contains("Cài đặt") ? reason : reason + " " + action;
     }
 
     private NotificationContent reminderContent(JsonNode payload) {

@@ -142,4 +142,32 @@ class PaymentNotificationConsumerTest {
 
         verify(notificationService, never()).createNotification(any());
     }
+
+    /** payOS từ chối tài khoản nhận: người chơi phải được báo là chuyển tiền LỖI và vì sao, không phải lời nhắc chung chung. */
+    @Test
+    void failedPayoutTellsThePlayerWhatWentWrong() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        UUID payerId = UUID.randomUUID();
+        UUID refundId = UUID.randomUUID();
+        when(notificationRepository.existsByEventId(eventId)).thenReturn(false);
+
+        consumer().consume("""
+                {
+                  "eventId": "%s",
+                  "eventType": "refund.awaiting-bank-account.v1",
+                  "payload": {
+                    "refundId": "%s", "payerId": "%s", "status": "AWAITING_BANK_ACCOUNT",
+                    "failureReason": "Số tài khoản ngân hàng không tồn tại hoặc không nhận được tiền (tài khoản •••• 6077). Kiểm tra lại số tài khoản và ngân hàng, hoặc chọn tài khoản khác."
+                  }
+                }
+                """.formatted(eventId, refundId, payerId));
+
+        ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
+        verify(notificationService).createNotification(captor.capture());
+        CreateNotificationCommand command = captor.getValue();
+        assertThat(command.title()).isEqualTo("Chuyển tiền hoàn chưa thành công");
+        assertThat(command.content()).contains("•••• 6077").contains("không tồn tại").contains("Ngân hàng & hoàn tiền");
+        assertThat(command.receiverId()).isEqualTo(payerId);
+        assertThat(command.referenceId()).isEqualTo(refundId);
+    }
 }
