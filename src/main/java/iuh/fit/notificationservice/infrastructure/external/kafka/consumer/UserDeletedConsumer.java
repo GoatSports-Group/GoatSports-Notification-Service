@@ -15,12 +15,12 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "user-deleted.consumer-enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "user-deleted.consumer-enabled", havingValue = "true")
 public class UserDeletedConsumer {
     private final ObjectMapper objectMapper;
     private final NotificationRepository notificationRepository;
 
-    @KafkaListener(topics = "${user-deleted.topic:user-deleted-topic}", groupId = "notification-service-user-deleted",
+    @KafkaListener(topics = "${user-deleted.topic}", groupId = "${user-deleted.notification-group-id}",
             containerFactory = "stringListenerContainerFactory")
     @Transactional
     public void consume(String message) throws Exception {
