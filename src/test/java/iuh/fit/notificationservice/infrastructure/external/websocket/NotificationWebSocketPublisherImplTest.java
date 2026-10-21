@@ -53,6 +53,22 @@ class NotificationWebSocketPublisherImplTest {
         verify(messagingTemplate).convertAndSend("/topic/admin/notifications", notification);
     }
 
+    /** Tài khoản bị khóa: tab đang mở của chính người đó nhận lệnh đăng xuất trên topic phiên riêng. */
+    @Test
+    void sessionRevocationGoesToTheUsersSessionTopic() {
+        SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
+        NotificationWebSocketPublisherImpl publisher = new NotificationWebSocketPublisherImpl(
+                messagingTemplate,
+                mock(AuthClient.class)
+        );
+        UUID userId = UUID.randomUUID();
+
+        publisher.publishSessionRevoked(userId, "ACCOUNT_BLOCKED");
+
+        verify(messagingTemplate).convertAndSend("/topic/user/session/" + userId,
+                (Object) java.util.Map.of("type", "SESSION_REVOKED", "reason", "ACCOUNT_BLOCKED"));
+    }
+
     private static NotificationResponseCommand notification(UUID receiverId) {
         return new NotificationResponseCommand(
                 UUID.randomUUID(),

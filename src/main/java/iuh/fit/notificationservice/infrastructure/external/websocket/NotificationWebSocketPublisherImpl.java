@@ -75,4 +75,11 @@ public class NotificationWebSocketPublisherImpl implements NotificationWebSocket
                 event.userId()
         );
     }
+
+    @Override
+    public void publishSessionRevoked(java.util.UUID userId, String reason) {
+        Object payload = java.util.Map.of("type", "SESSION_REVOKED", "reason", reason);
+        messagingTemplate.convertAndSend("/topic/user/session/" + userId, payload);
+        log.info("Session revoked event sent to user {} ({})", userId, reason);
+    }
 }
