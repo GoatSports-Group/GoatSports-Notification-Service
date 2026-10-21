@@ -26,4 +26,7 @@ public interface NotificationRepository {
     void markAllReadByReceiverId(UUID receiverId);
 
     void deleteById(UUID id) throws ServiceException;
+
+    /** Xóa mọi thông báo của một người nhận (tài khoản đã bị xóa). */
+    void deleteByReceiverId(UUID receiverId);
 }

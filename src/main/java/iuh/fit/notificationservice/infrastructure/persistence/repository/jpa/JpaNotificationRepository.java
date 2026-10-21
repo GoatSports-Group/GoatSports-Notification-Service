@@ -37,4 +37,8 @@ public interface JpaNotificationRepository extends JpaRepository<NotificationEnt
 
     @Query("select n.eventId from NotificationEntity n where n.eventId in :eventIds")
     List<UUID> findExistingEventIds(@Param("eventIds") Collection<UUID> eventIds);
+
+    @Modifying
+    @Query("delete from NotificationEntity n where n.receiverId = :receiverId")
+    int deleteByReceiverId(@Param("receiverId") UUID receiverId);
 }

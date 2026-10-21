@@ -129,4 +129,9 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         }
         jpaRepository.deleteById(id);
     }
+
+    @Override
+    public void deleteByReceiverId(UUID receiverId) {
+        jpaRepository.deleteByReceiverId(receiverId);
+    }
 }

@@ -244,6 +244,7 @@ class BroadcastServiceImplTest {
         @Override public long countUnread(UUID receiverId) { return 0; }
         @Override public void markAllReadByReceiverId(UUID receiverId) { }
         @Override public void deleteById(UUID id) { }
+        @Override public void deleteByReceiverId(UUID receiverId) { }
     }
 
     /** Keyset theo thứ tự byte không dấu như PostgreSQL (so chuỗi UUID). */
