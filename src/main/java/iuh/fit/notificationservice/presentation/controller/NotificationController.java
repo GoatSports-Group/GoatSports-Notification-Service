@@ -4,8 +4,10 @@ import iuh.fit.notificationservice.application.dto.PageFilter;
 import iuh.fit.notificationservice.application.dto.request.CountUnreadNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.DeleteNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.GetNotificationsCommand;
+import iuh.fit.notificationservice.application.dto.request.GetNotificationsSinceCommand;
 import iuh.fit.notificationservice.application.dto.request.MarkAllNotificationsReadCommand;
 import iuh.fit.notificationservice.application.dto.request.MarkNotificationReadCommand;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationCatchUp;
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.dto.response.base.BaseListResponse;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
@@ -15,13 +17,16 @@ import iuh.fit.notificationservice.application.port.security.CurrentUserProvider
 import iuh.fit.notificationservice.application.service.NotificationService;
 import iuh.fit.notificationservice.application.util.BaseUtil;
 import iuh.fit.notificationservice.presentation.converter.NotificationConverter;
+import iuh.fit.notificationservice.presentation.response.NotificationCatchUpResponse;
 import iuh.fit.notificationservice.presentation.response.NotificationResponse;
 import iuh.fit.shared.annotation.AuditLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -61,6 +66,26 @@ public class NotificationController {
                                 .toList();
 
                 return ResponseEntity.ok(new BaseListResponse(meta, responses));
+        }
+
+        @GetMapping("/since")
+        public ResponseEntity<NotificationCatchUpResponse> getNotificationsSince(
+                        @RequestParam("after") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime after,
+                        @RequestParam(value = "afterId", required = false) UUID afterId,
+                        @RequestParam(value = "limit", defaultValue = "50") int limit) throws ServiceException {
+                String userIdStr = currentUserProvider.getCurrentUserId()
+                                .orElseThrow(() -> new ServiceException(
+                                                 "Bạn phải đăng nhập để thực hiện chức năng này."));
+                UUID receiverId = BaseUtil.uuid(userIdStr);
+
+                NotificationCatchUp catchUp = notificationService.getNotificationsSince(
+                                new GetNotificationsSinceCommand(receiverId, after, afterId, limit));
+                List<NotificationResponse> items = catchUp.items().stream()
+                                .map(notificationMapper::toNotificationResponseCommand)
+                                .map(notificationConverter::toResponse)
+                                .toList();
+
+                return ResponseEntity.ok(new NotificationCatchUpResponse(items, catchUp.hasMore()));
         }
 
         @GetMapping("/unread-count")

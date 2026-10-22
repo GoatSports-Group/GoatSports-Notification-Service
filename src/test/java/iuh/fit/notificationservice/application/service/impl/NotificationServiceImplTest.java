@@ -1,6 +1,8 @@
 package iuh.fit.notificationservice.application.service.impl;
 
 import iuh.fit.notificationservice.application.dto.request.CreateNotificationCommand;
+import iuh.fit.notificationservice.application.dto.request.GetNotificationsSinceCommand;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationCatchUp;
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.exception.ServiceException;
 import iuh.fit.notificationservice.application.mapper.NotificationMapper;
@@ -15,6 +17,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -85,6 +89,27 @@ class NotificationServiceImplTest {
 
         verify(notificationRepository, Mockito.never()).save(any());
         Mockito.verifyNoInteractions(webSocketPublisher);
+    }
+
+    @Test
+    void catchUpLooksBackOnTheFirstCallAndPagesOnTheExactCursorAfterwards() {
+        UUID receiverId = UUID.randomUUID();
+        LocalDateTime newestSeen = LocalDateTime.of(2026, 10, 22, 10, 0);
+        List<Notification> three = List.of(new Notification(), new Notification(), new Notification());
+        when(notificationRepository.findNewerThan(receiverId, newestSeen.minusSeconds(30), new UUID(0L, 0L), 3))
+                .thenReturn(three);
+
+        NotificationCatchUp first = service().getNotificationsSince(
+                new GetNotificationsSinceCommand(receiverId, newestSeen, null, 2));
+        assertThat(first.items()).hasSize(2);
+        assertThat(first.hasMore()).isTrue();
+
+        UUID lastId = UUID.randomUUID();
+        when(notificationRepository.findNewerThan(receiverId, newestSeen, lastId, 51)).thenReturn(List.of());
+        NotificationCatchUp next = service().getNotificationsSince(
+                new GetNotificationsSinceCommand(receiverId, newestSeen, lastId, 500));
+        assertThat(next.items()).isEmpty();
+        assertThat(next.hasMore()).isFalse();
     }
 
     private NotificationServiceImpl service() {

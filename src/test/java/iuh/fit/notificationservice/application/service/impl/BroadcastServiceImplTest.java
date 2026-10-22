@@ -241,6 +241,9 @@ class BroadcastServiceImplTest {
         @Override public boolean existsByEventId(UUID eventId) { return eventIds.contains(eventId); }
         @Override public Optional<Notification> findById(UUID id) { return Optional.empty(); }
         @Override public PageResult<Notification> findByReceiverId(PageFilter filter, UUID receiverId) { return null; }
+        @Override public List<Notification> findNewerThan(UUID receiverId, LocalDateTime after, UUID afterId, int limit) {
+            return List.of();
+        }
         @Override public long countUnread(UUID receiverId) { return 0; }
         @Override public void markAllReadByReceiverId(UUID receiverId) { }
         @Override public void deleteById(UUID id) { }

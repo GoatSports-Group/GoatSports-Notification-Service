@@ -2,6 +2,7 @@ package iuh.fit.notificationservice.infrastructure.persistence.repository.jpa;
 
 import iuh.fit.notificationservice.domain.enums.NotificationStatus;
 import iuh.fit.notificationservice.infrastructure.persistence.entity.NotificationEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -34,6 +35,19 @@ public interface JpaNotificationRepository extends JpaRepository<NotificationEnt
     );
 
     boolean existsByEventId(UUID eventId);
+
+    @Query("""
+            select n from NotificationEntity n
+            where n.receiverId = :receiverId
+              and (n.createdAt > :after or (n.createdAt = :after and n.notificationId > :afterId))
+            order by n.createdAt asc, n.notificationId asc
+            """)
+    List<NotificationEntity> findNewerThan(
+            @Param("receiverId") UUID receiverId,
+            @Param("after") LocalDateTime after,
+            @Param("afterId") UUID afterId,
+            Pageable pageable
+    );
 
     @Query("select n.eventId from NotificationEntity n where n.eventId in :eventIds")
     List<UUID> findExistingEventIds(@Param("eventIds") Collection<UUID> eventIds);

@@ -5,9 +5,11 @@ import iuh.fit.notificationservice.application.dto.request.CountUnreadNotificati
 import iuh.fit.notificationservice.application.dto.request.CreateNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.DeleteNotificationCommand;
 import iuh.fit.notificationservice.application.dto.request.GetNotificationsCommand;
+import iuh.fit.notificationservice.application.dto.request.GetNotificationsSinceCommand;
 import iuh.fit.notificationservice.application.dto.request.MarkAllNotificationsReadCommand;
 import iuh.fit.notificationservice.application.dto.request.MarkNotificationReadCommand;
 import iuh.fit.notificationservice.application.dto.response.base.PageResult;
+import iuh.fit.notificationservice.application.dto.response.notification.NotificationCatchUp;
 import iuh.fit.notificationservice.application.dto.response.notification.NotificationResponseCommand;
 import iuh.fit.notificationservice.application.exception.ServiceException;
 import iuh.fit.notificationservice.application.mapper.NotificationMapper;
@@ -21,6 +23,8 @@ import iuh.fit.notificationservice.domain.enums.NotificationType;
 import iuh.fit.notificationservice.domain.enums.SourceService;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 public class NotificationServiceImpl implements NotificationService {
 
@@ -90,6 +94,20 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public PageResult<Notification> getAllNotifications(GetNotificationsCommand command) {
         return notificationRepository.findByReceiverId(command.filter(), command.receiverId());
+    }
+
+    @Override
+    public NotificationCatchUp getNotificationsSince(GetNotificationsSinceCommand command) {
+        int limit = Math.clamp(command.limit(), 1, 50);
+        boolean firstCall = command.afterId() == null;
+        // Lần gọi đầu lùi 30 giây: createdAt gán lúc tạo nhưng commit có thể muộn hơn bản sau nó, mốc khít sẽ sót.
+        // Client lọc trùng theo notificationId. Các trang sau đi đúng mốc để không lặp vô tận.
+        LocalDateTime after = firstCall ? command.after().minusSeconds(30) : command.after();
+        UUID afterId = firstCall ? new UUID(0L, 0L) : command.afterId();
+
+        List<Notification> rows = notificationRepository.findNewerThan(command.receiverId(), after, afterId, limit + 1);
+        boolean hasMore = rows.size() > limit;
+        return new NotificationCatchUp(hasMore ? rows.subList(0, limit) : rows, hasMore);
     }
 
     @Override

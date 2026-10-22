@@ -78,6 +78,13 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     }
 
     @Override
+    public List<Notification> findNewerThan(UUID receiverId, LocalDateTime after, UUID afterId, int limit) {
+        return jpaRepository.findNewerThan(receiverId, after, afterId, PageRequest.of(0, limit)).stream()
+                .map(notificationEntityMapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public PageResult<Notification> findByReceiverId(PageFilter filter, UUID receiverId) {
         int pageNum = Math.max(0, filter.page() - 1);
         int pageSize = filter.size() > 0 ? filter.size() : 10;

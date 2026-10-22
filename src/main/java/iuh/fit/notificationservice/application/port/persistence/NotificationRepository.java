@@ -5,6 +5,7 @@ import iuh.fit.notificationservice.application.dto.response.base.PageResult;
 import iuh.fit.notificationservice.application.exception.ServiceException;
 import iuh.fit.notificationservice.domain.entity.Notification;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,6 +21,9 @@ public interface NotificationRepository {
     Optional<Notification> findById(UUID id);
 
     PageResult<Notification> findByReceiverId(PageFilter filter, UUID receiverId);
+
+    /** Thông báo sau mốc (createdAt, notificationId), cũ nhất trước. */
+    List<Notification> findNewerThan(UUID receiverId, LocalDateTime after, UUID afterId, int limit);
 
     long countUnread(UUID receiverId);
 
