@@ -10,11 +10,15 @@ import iuh.fit.notificationservice.application.mapper.NotificationMapper;
 import iuh.fit.notificationservice.application.port.security.CurrentUserProvider;
 import iuh.fit.notificationservice.application.service.NotificationService;
 import iuh.fit.notificationservice.application.util.BaseUtil;
+import iuh.fit.notificationservice.domain.entity.Notification;
 import iuh.fit.notificationservice.presentation.converter.NotificationConverter;
 import iuh.fit.notificationservice.presentation.response.NotificationResponse;
 import iuh.fit.notificationservice.presentation.request.CreateNotificationRequest;
 import iuh.fit.shared.annotation.AuditLog;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +52,7 @@ public class NotificationInternalController {
                 request.referenceType(),
                 request.referenceId()
         );
-        var created = notificationService.createNotification(command);
+        Notification created = notificationService.createNotification(command);
         if (created == null) return ResponseEntity.ok().build(); // eventId đã xử lý trước đó
         NotificationResponseCommand result = notificationMapper.toNotificationResponseCommand(created);
         return ResponseEntity.status(HttpStatus.CREATED).body(notificationConverter.toResponse(result));
@@ -69,12 +73,12 @@ public class NotificationInternalController {
 
     public record AdminAlertRequest(
             UUID eventId,
-            @jakarta.validation.constraints.NotBlank String title,
-            @jakarta.validation.constraints.NotBlank String content,
-            @jakarta.validation.constraints.NotBlank String sourceService,
+            @NotBlank String title,
+            @NotBlank String content,
+            @NotBlank String sourceService,
             /** SYSTEM_ALERT (sự cố dịch vụ) hoặc SECURITY_ALERT (đăng nhập thất bại liên tục). */
-            @jakarta.validation.constraints.Pattern(regexp = "SYSTEM_ALERT|SECURITY_ALERT") String referenceType,
-            @jakarta.validation.constraints.NotNull UUID referenceId
+            @Pattern(regexp = "SYSTEM_ALERT|SECURITY_ALERT") String referenceType,
+            @NotNull UUID referenceId
     ) {
     }
 

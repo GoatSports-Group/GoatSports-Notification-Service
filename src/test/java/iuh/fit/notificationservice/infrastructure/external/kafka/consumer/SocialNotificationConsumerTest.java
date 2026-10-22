@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
@@ -123,7 +124,7 @@ class SocialNotificationConsumerTest {
         consumer().consume(friendRequest);
 
         ArgumentCaptor<CreateNotificationCommand> captor = ArgumentCaptor.forClass(CreateNotificationCommand.class);
-        verify(notificationService, org.mockito.Mockito.times(2)).createNotification(captor.capture());
+        verify(notificationService, Mockito.times(2)).createNotification(captor.capture());
         assertThat(captor.getAllValues().get(0).title()).isEqualTo("Lê Thu Hà đã nhắc đến bạn trong một bài viết");
         assertThat(captor.getAllValues().get(0).referenceType()).isEqualTo("POST");
         assertThat(captor.getAllValues().get(1).type()).isEqualTo("FRIENDSHIP");

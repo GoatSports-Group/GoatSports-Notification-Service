@@ -31,7 +31,7 @@ class SubscriptionGuardTest {
 
     @Test
     void aUserListensOnlyToTheirOwnChannels() {
-        var player = new GatewayHandshake.UserPrincipal(me, Set.of("PLAYER"));
+        GatewayHandshake.UserPrincipal player = new GatewayHandshake.UserPrincipal(me, Set.of("PLAYER"));
 
         assertThat(guard.preSend(subscribe("/topic/user/notifications/" + me, player), channel)).isNotNull();
         assertThat(guard.preSend(subscribe("/topic/user/session/" + me, player), channel)).isNotNull();
@@ -43,8 +43,8 @@ class SubscriptionGuardTest {
 
     @Test
     void theAdminChannelIsForAdminsAndUnknownTopicsAreRefused() {
-        var player = new GatewayHandshake.UserPrincipal(me, Set.of("PLAYER"));
-        var admin = new GatewayHandshake.UserPrincipal(UUID.randomUUID(), GatewayHandshake.roles("ROLE_ADMIN"));
+        GatewayHandshake.UserPrincipal player = new GatewayHandshake.UserPrincipal(me, Set.of("PLAYER"));
+        GatewayHandshake.UserPrincipal admin = new GatewayHandshake.UserPrincipal(UUID.randomUUID(), GatewayHandshake.roles("ROLE_ADMIN"));
 
         assertThatThrownBy(() -> guard.preSend(subscribe("/topic/admin/notifications", player), channel))
                 .isInstanceOf(IllegalArgumentException.class);

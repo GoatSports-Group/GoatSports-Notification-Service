@@ -12,6 +12,7 @@ import iuh.fit.notificationservice.domain.enums.NotificationType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
@@ -82,8 +83,8 @@ class NotificationServiceImplTest {
                 eventId, UUID.randomUUID(), "Hết giờ giữ sân — đang hoàn tiền", "Nội dung",
                 "BOOKING", "VENUE", "BOOKING", UUID.randomUUID()))).isNull();
 
-        verify(notificationRepository, org.mockito.Mockito.never()).save(any());
-        org.mockito.Mockito.verifyNoInteractions(webSocketPublisher);
+        verify(notificationRepository, Mockito.never()).save(any());
+        Mockito.verifyNoInteractions(webSocketPublisher);
     }
 
     private NotificationServiceImpl service() {

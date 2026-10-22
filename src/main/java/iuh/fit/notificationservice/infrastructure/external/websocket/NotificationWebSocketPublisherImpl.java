@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -77,8 +79,8 @@ public class NotificationWebSocketPublisherImpl implements NotificationWebSocket
     }
 
     @Override
-    public void publishSessionRevoked(java.util.UUID userId, String reason) {
-        Object payload = java.util.Map.of("type", "SESSION_REVOKED", "reason", reason);
+    public void publishSessionRevoked(UUID userId, String reason) {
+        Object payload = Map.of("type", "SESSION_REVOKED", "reason", reason);
         messagingTemplate.convertAndSend("/topic/user/session/" + userId, payload);
         log.info("Session revoked event sent to user {} ({})", userId, reason);
     }

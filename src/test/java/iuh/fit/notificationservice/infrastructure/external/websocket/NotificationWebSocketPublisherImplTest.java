@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
@@ -66,7 +67,7 @@ class NotificationWebSocketPublisherImplTest {
         publisher.publishSessionRevoked(userId, "ACCOUNT_BLOCKED");
 
         verify(messagingTemplate).convertAndSend("/topic/user/session/" + userId,
-                (Object) java.util.Map.of("type", "SESSION_REVOKED", "reason", "ACCOUNT_BLOCKED"));
+                (Object) Map.of("type", "SESSION_REVOKED", "reason", "ACCOUNT_BLOCKED"));
     }
 
     private static NotificationResponseCommand notification(UUID receiverId) {

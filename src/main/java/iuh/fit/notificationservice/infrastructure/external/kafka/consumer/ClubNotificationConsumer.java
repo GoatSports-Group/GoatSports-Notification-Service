@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -26,7 +27,7 @@ public class ClubNotificationConsumer {
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
 
-    private static final java.util.Set<String> SUPPORTED = java.util.Set.of(
+    private static final Set<String> SUPPORTED = Set.of(
             "club.activity.created.v1",
             "club.membership.requested.v1",
             "club.membership.approved.v1",
