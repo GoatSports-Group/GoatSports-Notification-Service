@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.CommonErrorHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +23,8 @@ public class KafkaConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> stringListenerContainerFactory(
             @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers,
-            @Value("${spring.kafka.consumer.auto-offset-reset:earliest}") String autoOffsetReset
+            @Value("${spring.kafka.consumer.auto-offset-reset:earliest}") String autoOffsetReset,
+            CommonErrorHandler kafkaErrorHandler
     ) {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -34,6 +36,8 @@ public class KafkaConfig {
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
+        // Factory tự dựng không được Spring Boot gắn error handler: gắn tay để có thử lại + DLT.
+        factory.setCommonErrorHandler(kafkaErrorHandler);
         return factory;
     }
 }
