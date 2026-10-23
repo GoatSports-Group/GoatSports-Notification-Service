@@ -67,6 +67,18 @@ class NotificationServiceImplTest {
         verify(webSocketPublisher).publish(response);
     }
 
+    /** venue-service gửi hai loại tham chiếu này cho sân ngoài hệ thống; thiếu trong enum là 400 và thông báo mất âm thầm. */
+    @Test
+    void acceptsTheExternalVenueReferenceTypesVenueServiceSends() throws Exception {
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        for (String referenceType : List.of("VENUE", "EXTERNAL_VENUE_SUGGESTION")) {
+            Notification saved = service().createNotification(new CreateNotificationCommand(
+                    UUID.randomUUID(), UUID.randomUUID(), "Tiêu đề", "Nội dung", "SYSTEM", "VENUE", referenceType,
+                    UUID.randomUUID()));
+            assertThat(saved.getReferenceType()).isEqualTo(NotificationReferenceType.valueOf(referenceType));
+        }
+    }
+
     @Test
     void invalidReferenceTypeReportsTheActualInvalidField() {
         CreateNotificationCommand command = new CreateNotificationCommand(

@@ -26,5 +26,7 @@ public enum NotificationReferenceType {
     SYSTEM_ALERT,
     SECURITY_ALERT,
     FINANCE_REPORT_EXPORT,
+    VENUE,
+    EXTERNAL_VENUE_SUGGESTION,
     SYSTEM
 }
