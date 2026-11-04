@@ -25,7 +25,7 @@ public class SessionInternalController {
     private final NotificationWebSocketPublisher webSocketPublisher;
 
     public record SessionRevokedRequest(
-            @NotNull @Pattern(regexp = "ACCOUNT_BLOCKED|ACCOUNT_DELETION_PENDING|ACCOUNT_INACTIVE") String reason) {
+            @NotNull @Pattern(regexp = "ACCOUNT_BLOCKED|ACCOUNT_DELETION_PENDING|ACCOUNT_INACTIVE|SESSION_REPLACED") String reason) {
     }
 
     @PostMapping("/{userId}/session-revoked")
