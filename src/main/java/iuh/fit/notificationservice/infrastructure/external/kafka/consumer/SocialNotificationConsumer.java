@@ -107,7 +107,7 @@ public class SocialNotificationConsumer {
     }
 
     /**
-     * Kiểm duyệt: không nêu tên quản trị viên. Quyết định mở trang "Kiểm duyệt nội dung" (tham chiếu là quyết định),
+     * Kiểm duyệt: không nêu tên quản trị viên. Quyết định mở tab "Kiểm duyệt" của Cộng đồng (tham chiếu là quyết định),
      * kết quả khiếu nại mở cùng trang (tham chiếu là khiếu nại).
      */
     private CreateNotificationCommand moderation(String eventType, UUID eventId, UUID receiverId, UUID aggregateId,
@@ -127,7 +127,7 @@ public class SocialNotificationConsumer {
                 String reason = payload.path("reason").asText("");
                 String content = (reason.isBlank() ? "" : "Lý do: " + reason + ". ")
                         + (payload.path("appealable").asBoolean(false)
-                        ? "Nếu thấy chưa đúng, bạn có thể khiếu nại trong Cài đặt › Kiểm duyệt nội dung."
+                        ? "Nếu thấy chưa đúng, bạn có thể khiếu nại trong Cộng đồng › Kiểm duyệt."
                         : "Cảm ơn bạn đã đồng hành cùng cộng đồng GOAT Sports.");
                 yield new CreateNotificationCommand(eventId, receiverId, title, content,
                         "CONTENT_MODERATION", "SOCIAL", "CONTENT_REPORT", aggregateId);
