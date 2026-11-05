@@ -143,4 +143,40 @@ class SocialNotificationConsumerTest {
         assertThat(command.title()).isEqualTo("Phạm Khoa đã nhắc đến bạn trong một bình luận");
         assertThat(command.referenceId()).isEqualTo(postId);
     }
+
+    @Test
+    void hiddenPostTellsTheAuthorWhyAndHowToAppealWithoutNamingTheModerator() throws Exception {
+        UUID actionId = UUID.randomUUID();
+        String decided = """
+                {"eventId":"%s","eventType":"social.moderation.decided.v1","aggregateId":"%s","actorId":"%s",
+                 "payload":{"receiverId":"%s","actionType":"HIDE_CONTENT","targetType":"POST",
+                            "reason":"Quảng cáo lặp lại","appealable":"true"}}
+                """.formatted(UUID.randomUUID(), actionId, UUID.randomUUID(), UUID.randomUUID());
+
+        consumer().consume(decided);
+
+        CreateNotificationCommand command = captured();
+        assertThat(command.title()).isEqualTo("Bài viết của bạn đã bị ẩn");
+        assertThat(command.content()).contains("Quảng cáo lặp lại").contains("khiếu nại");
+        assertThat(command.type()).isEqualTo("CONTENT_MODERATION");
+        assertThat(command.referenceType()).isEqualTo("CONTENT_REPORT");
+        assertThat(command.referenceId()).isEqualTo(actionId);
+        verify(authClient, never()).getUserById(any());
+    }
+
+    @Test
+    void rejectedAppealSaysTheDecisionStands() throws Exception {
+        UUID appealId = UUID.randomUUID();
+        String reviewed = """
+                {"eventId":"%s","eventType":"social.moderation.appeal-reviewed.v1","aggregateId":"%s","actorId":"%s",
+                 "payload":{"receiverId":"%s","decision":"REJECTED","actionType":"REMOVE_CONTENT","targetType":"COMMENT"}}
+                """.formatted(UUID.randomUUID(), appealId, UUID.randomUUID(), UUID.randomUUID());
+
+        consumer().consume(reviewed);
+
+        CreateNotificationCommand command = captured();
+        assertThat(command.title()).isEqualTo("Khiếu nại của bạn không được chấp nhận");
+        assertThat(command.referenceType()).isEqualTo("CONTENT_APPEAL");
+        assertThat(command.referenceId()).isEqualTo(appealId);
+    }
 }

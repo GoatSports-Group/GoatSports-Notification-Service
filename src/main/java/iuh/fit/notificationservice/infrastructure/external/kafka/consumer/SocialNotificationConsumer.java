@@ -52,7 +52,9 @@ public class SocialNotificationConsumer {
             }
             if (notificationRepository.existsByEventId(eventId)) return;
 
-            CreateNotificationCommand command = toCommand(eventType, eventId, receiverId, actorId, payload);
+            CreateNotificationCommand command = eventType.startsWith("social.moderation.")
+                    ? moderation(eventType, eventId, receiverId, uuid(envelope, "aggregateId"), payload)
+                    : toCommand(eventType, eventId, receiverId, actorId, payload);
             if (command != null) notificationService.createNotification(command);
         } catch (Exception exception) {
             log.error("Không xử lý được social event cho notification: {}", exception.getMessage(), exception);
@@ -101,6 +103,54 @@ public class SocialNotificationConsumer {
                         "COMMUNITY", "SOCIAL", "COMMUNITY_USER", actorId);
             }
             default -> null;
+        };
+    }
+
+    /**
+     * Kiểm duyệt: không nêu tên quản trị viên. Quyết định mở trang "Kiểm duyệt nội dung" (tham chiếu là quyết định),
+     * kết quả khiếu nại mở cùng trang (tham chiếu là khiếu nại).
+     */
+    private CreateNotificationCommand moderation(String eventType, UUID eventId, UUID receiverId, UUID aggregateId,
+                                                 JsonNode payload) {
+        String action = payload.path("actionType").asText("");
+        String what = targetLabel(payload.path("targetType").asText(""));
+        return switch (eventType) {
+            case "social.moderation.decided.v1" -> {
+                String title = switch (action) {
+                    case "HIDE_CONTENT" -> what + " của bạn đã bị ẩn";
+                    case "REMOVE_CONTENT" -> what + " của bạn đã bị gỡ";
+                    case "WARNING" -> "Bạn nhận một cảnh cáo từ quản trị viên";
+                    case "RESTORE_CONTENT" -> what + " của bạn đã được hiển thị lại";
+                    default -> null;
+                };
+                if (title == null) yield null;
+                String reason = payload.path("reason").asText("");
+                String content = (reason.isBlank() ? "" : "Lý do: " + reason + ". ")
+                        + (payload.path("appealable").asBoolean(false)
+                        ? "Nếu thấy chưa đúng, bạn có thể khiếu nại trong Cài đặt › Kiểm duyệt nội dung."
+                        : "Cảm ơn bạn đã đồng hành cùng cộng đồng GOAT Sports.");
+                yield new CreateNotificationCommand(eventId, receiverId, title, content,
+                        "CONTENT_MODERATION", "SOCIAL", "CONTENT_REPORT", aggregateId);
+            }
+            case "social.moderation.appeal-reviewed.v1" -> {
+                boolean approved = "APPROVED".equals(payload.path("decision").asText(""));
+                String content = !approved
+                        ? "Quản trị viên giữ nguyên quyết định kiểm duyệt sau khi xem xét."
+                        : "WARNING".equals(action) ? "Cảnh cáo đã được rút lại." : what + " đã được hiển thị lại.";
+                yield new CreateNotificationCommand(eventId, receiverId,
+                        approved ? "Khiếu nại của bạn đã được chấp nhận" : "Khiếu nại của bạn không được chấp nhận",
+                        content, "CONTENT_MODERATION", "SOCIAL", "CONTENT_APPEAL", aggregateId);
+            }
+            default -> null;
+        };
+    }
+
+    private static String targetLabel(String targetType) {
+        return switch (targetType) {
+            case "COMMENT" -> "Bình luận";
+            case "MESSAGE" -> "Tin nhắn";
+            case "USER" -> "Tài khoản";
+            default -> "Bài viết";
         };
     }
 
